@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Provider-agnostic adapter interface
 
@@ -35,8 +35,6 @@ The chat client MUST:
 - **WHEN** the extractor calls the chat client with a `response_schema`
 - **THEN** the outbound JSON body contains `"format": "json"`
 - **AND** the response is parsed as JSON before being returned
-
-## ADDED Requirements
 
 ### Requirement: ProviderConfig block
 

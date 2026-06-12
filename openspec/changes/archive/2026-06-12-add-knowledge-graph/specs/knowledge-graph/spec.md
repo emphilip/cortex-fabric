@@ -1,8 +1,10 @@
 ## MODIFIED Requirements
 
-### Requirement: Named relationship types
+### Requirement: Named relationship vocabulary
 
 The graph schema SHALL represent concept-to-concept relationships as **named edges** drawn from a curated, extensible vocabulary stored in `hive_mind.relationship_vocab`. Vocabulary rows SHALL include `name` (primary key), `description`, `inverse` (optional name of the inverse relation), `directed` (boolean, default true), and `deprecated_at` (nullable timestamp). The vocabulary MUST be seeded at DB init with at least: `depends_on`, `defined_in`, `supersedes`, `mentions`, `related_to`, `causes`, `derived_from`.
+
+The deterministic code extractor also requires the seeded names `calls`, `imports`, and `uses`, for a total of ten default vocabulary entries.
 
 Edges in `hive_mind.relationship_edge` SHALL carry a `type TEXT` column with a FK to `relationship_vocab.name`. Inserts with an unknown name MUST fail at the database level.
 
@@ -16,7 +18,7 @@ The vocabulary table MUST be editable through an admin API: add a row, edit `des
 #### Scenario: Vocabulary seeded at init
 
 - **WHEN** the database first starts under this change
-- **THEN** `relationship_vocab` contains the seven seeded names with `deprecated_at IS NULL`
+- **THEN** `relationship_vocab` contains the ten seeded semantic and code relationship names with `deprecated_at IS NULL`
 
 #### Scenario: Admin adds a new relationship type
 
@@ -28,6 +30,8 @@ The vocabulary table MUST be editable through an admin API: add a row, edit `des
 - **WHEN** an admin deprecates the `causes` vocabulary row
 - **THEN** existing edges with `type = "causes"` continue to traverse normally
 - **AND** new edge inserts with `type = "causes"` are rejected with a `vocab_deprecated` error
+
+## ADDED Requirements
 
 ### Requirement: Automatic relationship extraction
 
@@ -116,8 +120,6 @@ Deferred. The system SHALL NOT compute or expose concept clusters in this change
 
 - **WHEN** a caller queries any `/graph/clusters` endpoint
 - **THEN** the pipeline returns `404 Not Found`
-
-## ADDED Requirements
 
 ### Requirement: Concept identity and lifecycle
 

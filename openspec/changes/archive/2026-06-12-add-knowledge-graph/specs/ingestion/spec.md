@@ -2,9 +2,30 @@
 
 ### Requirement: Git connector
 
+The git connector SHALL clone the repo, derive stable entity IDs from `(tenant, source_uri)`, compute content hashes, and emit `GitDocument`s.
+
+File discovery MUST use `graphify.collect_files(repo_path)` and honour `.graphifyignore`. Code files MUST use symbol-aware graphifyy chunking; non-code files MUST use the paragraph chunker. Per-file discovery or parse failures MUST log a structured warning and allow the ingest to continue.
+
 The git connector's per-chunk pipeline SHALL gain a final step that calls `extract_for_chunk` after the chunk's vector is upserted into Qdrant. The extraction step MUST run synchronously in the same chunk loop and MUST be wrapped in try/except so a single failure does not abort the ingest.
 
 The connector MUST NOT block on extraction longer than the configured `extraction.timeout_seconds` (default 30). Exceeding the timeout cancels the extractor call, logs the timeout, and proceeds to the next chunk.
+
+#### Scenario: Discovery uses graphifyy's language-aware filter
+
+- **WHEN** the git connector ingests a repo that contains `.kt` (Kotlin) and `.swift` files
+- **THEN** the Kotlin and Swift files appear in the document stream
+- **AND** the connector code contains no extension allow-list
+
+#### Scenario: `.graphifyignore` is respected
+
+- **WHEN** the cloned repo contains a `.graphifyignore` file listing `vendor/`
+- **THEN** files under `vendor/` are not yielded by the connector
+
+#### Scenario: Per-file parse failure does not abort the ingest
+
+- **WHEN** graphifyy's discovery or extraction raises on a single corrupted file
+- **THEN** the connector logs a structured warning naming the path
+- **AND** the surrounding files in the same repo are still ingested
 
 #### Scenario: Extraction runs after vector upsert
 

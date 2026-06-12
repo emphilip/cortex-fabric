@@ -2,13 +2,21 @@
 
 ### Requirement: Per-stage token accounting
 
-The set of token-emitting call sites grows in this change. Every stage that invokes a model SHALL record `model`, `provider`, `tokens_in`, `tokens_out` (when the response carries them), and `latency_ms` on its OTel span AND increment `hive_mind_tokens_total{stage,model,provider,tenant,direction}`. The new call site is the **graph extraction stage** invoked during ingestion; its `stage` label MUST be `"graph_extract"`.
+Every stage that invokes a model SHALL record `model`, `provider`, `tokens_in`, `tokens_out` (when the response carries them), and `latency_ms` on its OTel span AND increment `hive_mind_tokens_total{stage,model,provider,tenant,direction}`.
+
+Text relationship extraction MUST use `stage="graph_extract_text"` and emit an OTel span named `pipeline.graph_extract_text`. Deterministic Graphifyy extraction MUST use `stage="graph_extract_code"` and emit an OTel span named `pipeline.graph_extract_code` with `model="graphifyy"`, `provider="graphifyy"`, and zero tokens; it MUST NOT increment the token counter.
 
 #### Scenario: Graph extraction token accounting
 
 - **WHEN** the ingestion service runs the extractor on a chunk and the chat model returns a usable response
-- **THEN** an OTel span `pipeline.graph_extract` is emitted with `model`, `provider`, `tokens_in`, `tokens_out`, and `latency_ms`
-- **AND** `hive_mind_tokens_total{stage="graph_extract"}` increases by the recorded counts
+- **THEN** an OTel span `pipeline.graph_extract_text` is emitted with `model`, `provider`, `tokens_in`, `tokens_out`, and `latency_ms`
+- **AND** `hive_mind_tokens_total{stage="graph_extract_text"}` increases by the recorded counts
+
+#### Scenario: Code extraction emits a token-zero span
+
+- **WHEN** the ingestion service runs Graphifyy on a code file
+- **THEN** an OTel span `pipeline.graph_extract_code` is emitted with zero token attributes
+- **AND** `hive_mind_tokens_total{stage="graph_extract_code"}` is not incremented
 
 #### Scenario: Other stages unchanged
 
