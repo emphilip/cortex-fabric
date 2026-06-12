@@ -11,13 +11,22 @@ export function RunNowPanel() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!repoUrl.trim()) return;
+    const candidate = repoUrl.trim();
+    try {
+      const parsed = new URL(candidate);
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        throw new Error("unsupported protocol");
+      }
+    } catch {
+      setError("Enter a valid http(s) repository URL.");
+      return;
+    }
     setBusy(true);
     setError(null);
     const res = await fetch("/api/proxy/ingestion/git/run", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ repo_url: repoUrl.trim() }),
+      body: JSON.stringify({ repo_url: candidate }),
     });
     setBusy(false);
     if (!res.ok) {
@@ -40,6 +49,7 @@ export function RunNowPanel() {
       }}
     >
       <input
+        type="url"
         name="repo_url"
         value={repoUrl}
         onChange={(e) => setRepoUrl(e.target.value)}

@@ -46,3 +46,6 @@ export const Failed: Story = {
 export const Queued: Story = {
   args: { run: { ...base, status: "queued" } },
 };
+
+export const Empty: Story = Queued;
+export const Error: Story = Failed;

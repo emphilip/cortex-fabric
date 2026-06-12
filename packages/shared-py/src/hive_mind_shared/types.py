@@ -115,6 +115,15 @@ class EntityLineage(BaseModel):
     children: list[EntityRef] = Field(default_factory=list)
 
 
+class EntityAuditAppearance(BaseModel):
+    id: int
+    created_at: datetime
+    correlation_id: str
+    tool: str
+    query: str
+    outcome: Literal["ok", "error"]
+
+
 class Entity(EntityListItem):
     body: str
     content_hash: str
@@ -125,6 +134,7 @@ class Entity(EntityListItem):
     ingested_at: datetime
     last_verified_at: datetime
     lineage: EntityLineage = Field(default_factory=EntityLineage)
+    audit_appearances: list[EntityAuditAppearance] = Field(default_factory=list)
 
 
 class EntityListResponse(BaseModel):

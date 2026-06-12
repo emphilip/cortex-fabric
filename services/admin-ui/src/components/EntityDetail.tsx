@@ -181,6 +181,31 @@ export function EntityDetail({
         </pre>
       </section>
 
+      <section>
+        <h3 style={{ marginTop: 0, marginBottom: 8 }}>
+          Recent audit appearances ({entity.audit_appearances.length})
+        </h3>
+        {entity.audit_appearances.length === 0 ? (
+          <p style={{ color: "var(--muted)", margin: 0 }}>
+            This entity has not appeared in recently assembled context.
+          </p>
+        ) : (
+          <ul style={{ margin: 0, paddingLeft: 20 }}>
+            {entity.audit_appearances.map((appearance) => (
+              <li key={appearance.id} style={{ marginBottom: 6 }}>
+                <a href={`/queries/${appearance.id}`}>
+                  {appearance.query || appearance.tool}
+                </a>{" "}
+                <span style={{ color: "var(--muted)", fontSize: 12 }}>
+                  {new Date(appearance.created_at).toLocaleString()} ·{" "}
+                  {appearance.outcome}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       {!tombstoned && onTombstone ? (
         <section
           style={{

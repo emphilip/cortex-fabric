@@ -41,3 +41,6 @@ export const Tombstoned: Story = {
 export const NoTitle: Story = {
   args: { entity: { ...base.entity, title: null } },
 };
+
+export const Empty: Story = NoTitle;
+export const Error: Story = Tombstoned;

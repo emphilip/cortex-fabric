@@ -99,7 +99,12 @@ async def readyz() -> dict:
         await app.state.vector._client.get_collections()  # noqa: SLF001
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=503, detail=f"qdrant: {exc}") from exc
-    return {"status": "ready", "tenant": cfg.tenant}
+    return {
+        "status": "ready",
+        "tenant": cfg.tenant,
+        "embedding_model": cfg.ollama.embedding_model,
+        "vector_size": cfg.qdrant.vector_size,
+    }
 
 
 @app.post("/retrieve", response_model=RetrievalResponse)

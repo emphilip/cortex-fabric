@@ -50,4 +50,13 @@ describe("IngestionRunRow", () => {
     );
     expect(screen.getByText("500 ms")).toBeInTheDocument();
   });
+
+  it("renders the failure error", () => {
+    render(
+      <IngestionRunRow
+        run={{ ...base, status: "failed", error: "repository unavailable" }}
+      />,
+    );
+    expect(screen.getByText("repository unavailable")).toBeInTheDocument();
+  });
 });

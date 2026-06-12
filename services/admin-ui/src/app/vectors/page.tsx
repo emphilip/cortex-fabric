@@ -14,6 +14,12 @@ export default async function VectorsPage() {
         <span style={{ color: "var(--muted)", fontSize: 12 }}>
           tenant: {readyz?.tenant ?? "?"}
         </span>
+        <span style={{ color: "var(--muted)", fontSize: 12 }}>
+          model: <code>{readyz?.embedding_model ?? "unknown"}</code>
+        </span>
+        <span style={{ color: "var(--muted)", fontSize: 12 }}>
+          dimensions: {readyz?.vector_size ?? "?"}
+        </span>
       </header>
       <p style={{ color: "var(--muted)", marginTop: 0 }}>
         Search the embedded catalogue. Every request reuses the pipeline's

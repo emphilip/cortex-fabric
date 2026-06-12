@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3000",
+    "prebuild": "pnpm --filter @hive-mind/shared build",
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "next lint",
     "format": "echo 'no formatter'",
     "test": "vitest run",
     "storybook": "storybook dev -p 6006",
+    "prebuild-storybook": "pnpm --filter @hive-mind/shared build",
     "build-storybook": "storybook build"
   },
   "dependencies": {

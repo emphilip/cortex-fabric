@@ -71,6 +71,14 @@ class FakeVector:
         return self.hits[:limit]
 
 
+@dataclass
+class FakeAudit:
+    appearances: list[dict[str, Any]]
+
+    async def list_for_entity(self, *, tenant: str, entity_id: str, limit: int):
+        return self.appearances[:limit]
+
+
 class FakeTracer:
     class _Span:
         def __enter__(self):
@@ -92,6 +100,7 @@ def _mount(
     vector: FakeVector | None = None,
     embeddings: FakeEmbeddings | None = None,
     ingestion_client: httpx.AsyncClient | None = None,
+    audit: FakeAudit | None = None,
 ) -> TestClient:
     app = FastAPI()
     app.include_router(admin_routes.router)
@@ -100,6 +109,7 @@ def _mount(
     app.state.catalog = catalog or FakeCatalog()
     app.state.vector = vector or FakeVector(hits=[])
     app.state.embeddings = embeddings or FakeEmbeddings()
+    app.state.audit = audit or FakeAudit(appearances=[])
     if ingestion_client is not None:
         app.state.ingestion_client = ingestion_client
     return TestClient(app)
@@ -159,7 +169,7 @@ def test_list_entities_rejects_oversized_limit():
     assert resp.status_code == 422  # FastAPI validation
 
 
-def test_get_entity_returns_lineage():
+def test_get_entity_returns_lineage_and_audit_appearances():
     catalog = FakeCatalog(
         get_result={
             "entity_id": "p1",
@@ -187,7 +197,21 @@ def test_get_entity_returns_lineage():
             },
         }
     )
-    client = _mount(catalog=catalog)
+    client = _mount(
+        catalog=catalog,
+        audit=FakeAudit(
+            appearances=[
+                {
+                    "id": 12,
+                    "created_at": datetime(2026, 6, 11),
+                    "correlation_id": "corr-12",
+                    "tool": "retrieve_for_context",
+                    "query": "prompt caching",
+                    "outcome": "ok",
+                }
+            ]
+        ),
+    )
 
     resp = client.get("/entities/p1")
 
@@ -196,6 +220,7 @@ def test_get_entity_returns_lineage():
     assert body["entity_id"] == "p1"
     assert body["lineage"]["children"][0]["entity_id"] == "c1"
     assert body["lineage"]["parent"] is None
+    assert body["audit_appearances"][0]["id"] == 12
 
 
 def test_get_entity_404():

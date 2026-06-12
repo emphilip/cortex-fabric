@@ -16,6 +16,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
 from hive_mind_shared import (
     Entity,
+    EntityAuditAppearance,
     EntityLineage,
     EntityListItem,
     EntityListResponse,
@@ -85,6 +86,13 @@ async def get_entity(request: Request, entity_id: str) -> Entity:
         children=[EntityRef.model_validate(c) for c in lineage_in.get("children", [])],
     )
     row["lineage"] = lineage.model_dump()
+    appearances = await request.app.state.audit.list_for_entity(
+        tenant=cfg.tenant, entity_id=entity_id, limit=20
+    )
+    row["audit_appearances"] = [
+        EntityAuditAppearance.model_validate(item).model_dump()
+        for item in appearances
+    ]
     return Entity.model_validate(row)
 
 

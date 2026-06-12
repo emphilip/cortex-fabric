@@ -58,17 +58,25 @@ export function IngestionRunRow({ run }: IngestionRunRowProps) {
       >
         {run.status}
       </span>
-      <span
-        style={{
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          fontFamily: "monospace",
-          fontSize: 12,
-        }}
-        title={run.repo ?? run.run_id}
-      >
-        {run.repo ?? run.run_id}
+      <span style={{ minWidth: 0 }}>
+        <span
+          style={{
+            display: "block",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontFamily: "monospace",
+            fontSize: 12,
+          }}
+          title={run.repo ?? run.run_id}
+        >
+          {run.repo ?? run.run_id}
+        </span>
+        {run.error ? (
+          <span style={{ display: "block", color: "var(--error)", fontSize: 11 }}>
+            {run.error}
+          </span>
+        ) : null}
       </span>
       <span style={{ color: "var(--muted)", fontSize: 12 }}>
         {new Date(run.started_at).toLocaleTimeString()}

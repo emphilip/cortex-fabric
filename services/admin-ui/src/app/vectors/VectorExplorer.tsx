@@ -21,12 +21,11 @@ export function VectorExplorer() {
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<VectorSearchResponse | null>(null);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const executeSearch = async (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
     setBusy(true);
     setError(null);
-    const r = await runSearch(query.trim(), topK);
+    const r = await runSearch(searchQuery.trim(), topK);
     setBusy(false);
     if (!r) {
       setError("Search failed — see pipeline logs.");
@@ -36,8 +35,15 @@ export function VectorExplorer() {
     setResponse(r);
   };
 
-  const onShowNeighbours = (hit: VectorSearchHit) => {
-    setQuery(hit.title ?? hit.entity_id);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await executeSearch(query);
+  };
+
+  const onShowNeighbours = async (hit: VectorSearchHit) => {
+    const neighbourQuery = hit.snippet || hit.title || hit.entity_id;
+    setQuery(neighbourQuery);
+    await executeSearch(neighbourQuery);
   };
 
   return (

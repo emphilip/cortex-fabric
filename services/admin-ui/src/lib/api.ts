@@ -54,6 +54,8 @@ export async function getAudit(id: number): Promise<AuditRow | null> {
 export interface ReadyzInfo {
   status: string;
   tenant?: string;
+  embedding_model?: string;
+  vector_size?: number;
 }
 
 export async function getReadyz(): Promise<ReadyzInfo | null> {

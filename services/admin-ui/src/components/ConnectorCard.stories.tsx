@@ -29,3 +29,6 @@ export const Deferred: Story = {
     },
   },
 };
+
+export const Empty: Story = SupportedNoRuns;
+export const Error: Story = Deferred;

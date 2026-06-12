@@ -106,6 +106,15 @@ export interface EntityLineage {
   children: readonly EntityRef[];
 }
 
+export interface EntityAuditAppearance {
+  id: number;
+  created_at: string;
+  correlation_id: string;
+  tool: string;
+  query: string;
+  outcome: "ok" | "error";
+}
+
 export interface Entity extends EntityListItem {
   body: string;
   content_hash: string;
@@ -116,6 +125,7 @@ export interface Entity extends EntityListItem {
   ingested_at: string;
   last_verified_at: string;
   lineage: EntityLineage;
+  audit_appearances: readonly EntityAuditAppearance[];
 }
 
 export interface EntityListResponse {

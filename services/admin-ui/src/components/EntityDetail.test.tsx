@@ -21,6 +21,7 @@ const base = {
   ingested_at: new Date("2026-06-11T12:00:00Z").toISOString(),
   last_verified_at: new Date("2026-06-11T12:00:00Z").toISOString(),
   lineage: { parent: null, children: [] },
+  audit_appearances: [],
 };
 
 describe("EntityDetail", () => {
@@ -79,5 +80,26 @@ describe("EntityDetail", () => {
     const button = screen.getByText(/Show full body/);
     fireEvent.click(button);
     expect(onToggle).toHaveBeenCalled();
+  });
+
+  it("renders recent audit appearances", () => {
+    render(
+      <EntityDetail
+        entity={{
+          ...base,
+          audit_appearances: [
+            {
+              id: 9,
+              created_at: new Date("2026-06-11T12:10:00Z").toISOString(),
+              correlation_id: "corr-9",
+              tool: "retrieve_for_context",
+              query: "prompt caching",
+              outcome: "ok",
+            },
+          ],
+        }}
+      />,
+    );
+    expect(screen.getByText("prompt caching")).toHaveAttribute("href", "/queries/9");
   });
 });

@@ -105,3 +105,20 @@ class AuditStore:
                 audit_id,
             )
         return dict(row) if row else None
+
+    async def list_for_entity(
+        self, *, tenant: str, entity_id: str, limit: int = 20
+    ) -> list[dict[str, Any]]:
+        """Return recent retrieval audits where the entity reached final context."""
+        pool = self._pool_required()
+        sql = """
+        SELECT id, created_at, correlation_id, tool, query, outcome
+        FROM hive_mind.audit_log
+        WHERE tenant = $1
+          AND $2::uuid = ANY(final_entity_ids)
+        ORDER BY created_at DESC
+        LIMIT $3
+        """
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(sql, tenant, entity_id, limit)
+        return [dict(row) for row in rows]

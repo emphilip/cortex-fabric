@@ -35,6 +35,7 @@ const base = {
         { entity_id: "c2", title: "chunk 1", source_uri: "git://x#chunk=1" },
       ],
     },
+    audit_appearances: [],
   },
   onTombstone: () => alert("tombstone"),
 };
@@ -57,6 +58,25 @@ export const Tombstoned: Story = {
     entity: {
       ...base.entity,
       tombstoned_at: new Date("2026-06-11T13:00:00Z").toISOString(),
+    },
+  },
+};
+
+export const Error: Story = {
+  args: {
+    entity: {
+      ...base.entity,
+      tombstoned_at: new Date("2026-06-11T13:00:00Z").toISOString(),
+      audit_appearances: [
+        {
+          id: 42,
+          created_at: new Date("2026-06-11T12:30:00Z").toISOString(),
+          correlation_id: "failed-retrieval",
+          tool: "retrieve_for_context",
+          query: "failed request",
+          outcome: "error",
+        },
+      ],
     },
   },
 };

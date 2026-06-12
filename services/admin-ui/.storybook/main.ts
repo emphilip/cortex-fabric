@@ -19,6 +19,28 @@ const config: StorybookConfig = {
       "next/navigation": path.resolve(__dirname, "./mocks/next-navigation.ts"),
       "@": path.resolve(__dirname, "../src"),
     };
+    cfg.build = {
+      ...cfg.build,
+      // Storybook's own docs/runtime bundles exceed Vite's generic 500 kB
+      // warning threshold. They are tooling-only and are not shipped with the
+      // admin application.
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        ...cfg.build?.rollupOptions,
+        onwarn(warning, warn) {
+          // Storybook core currently contains two eval calls in its preview
+          // runtime. Suppress that dependency warning while preserving every
+          // project-code warning.
+          if (
+            warning.code === "EVAL" &&
+            warning.id?.includes("@storybook/core")
+          ) {
+            return;
+          }
+          warn(warning);
+        },
+      },
+    };
     return cfg;
   },
 };
