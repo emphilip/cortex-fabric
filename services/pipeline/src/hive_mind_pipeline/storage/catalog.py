@@ -205,6 +205,28 @@ class CatalogStore:
             row = await conn.fetchrow(sql, tenant, entity_id)
         return dict(row) if row else None
 
+    async def get_evidence_chunks(
+        self, *, tenant: str, edge_id: str
+    ) -> list[dict[str, Any]]:
+        """Return compact catalog references supporting a graph edge."""
+        pool = self._require_pool()
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT entity.entity_id::text, entity.title, entity.source_uri
+                FROM hive_mind.relationship_evidence evidence
+                JOIN hive_mind.relationship_edge edge
+                  ON edge.edge_id = evidence.edge_id
+                JOIN hive_mind.entity entity
+                  ON entity.entity_id = evidence.entity_id
+                WHERE edge.tenant = $1 AND edge.edge_id = $2
+                ORDER BY evidence.created_at, evidence.evidence_id
+                """,
+                tenant,
+                edge_id,
+            )
+        return [dict(row) for row in rows]
+
     async def lexical_search(
         self, *, tenant: str, query: str, limit: int
     ) -> list[CatalogHit]:

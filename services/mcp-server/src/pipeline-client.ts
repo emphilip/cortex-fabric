@@ -1,5 +1,19 @@
-import type { RetrievalRequest, RetrievalResponse } from "@hive-mind/shared";
+import type {
+  RetrievalRequest,
+  RetrievalResponse,
+  TraverseRequest,
+  TraverseResponse,
+} from "@hive-mind/shared";
 import { request as undiciRequest } from "undici";
+
+export class PipelineRequestError extends Error {
+  constructor(
+    public readonly statusCode: number,
+    public readonly responseBody: string,
+  ) {
+    super(`pipeline ${statusCode}: ${responseBody}`);
+  }
+}
 
 export class PipelineClient {
   constructor(private readonly baseUrl: string) {}
@@ -13,9 +27,32 @@ export class PipelineClient {
     });
     if (res.statusCode >= 400) {
       const body = await res.body.text();
-      throw new Error(`pipeline ${res.statusCode}: ${body}`);
+      throw new PipelineRequestError(res.statusCode, body);
     }
     return (await res.body.json()) as RetrievalResponse;
+  }
+
+  async traverse(req: TraverseRequest): Promise<TraverseResponse> {
+    const url = new URL(`${this.baseUrl.replace(/\/$/, "")}/graph/traverse`);
+    url.searchParams.set("concept_id", req.concept_id);
+    if (req.types?.length) {
+      url.searchParams.set("types", req.types.join(","));
+    }
+    if (req.depth !== undefined) {
+      url.searchParams.set("depth", String(req.depth));
+    }
+    if (req.limit !== undefined) {
+      url.searchParams.set("limit", String(req.limit));
+    }
+    if (req.include_candidates !== undefined) {
+      url.searchParams.set("include_candidates", String(req.include_candidates));
+    }
+    const res = await undiciRequest(url);
+    if (res.statusCode >= 400) {
+      const body = await res.body.text();
+      throw new PipelineRequestError(res.statusCode, body);
+    }
+    return (await res.body.json()) as TraverseResponse;
   }
 
   async health(): Promise<boolean> {

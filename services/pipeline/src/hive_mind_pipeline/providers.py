@@ -93,3 +93,95 @@ class OllamaEmbeddings:
 
     async def close(self) -> None:
         await self._client.aclose()
+
+
+# ---------------------------------------------------------------------------
+# Chat client
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ChatResult:
+    content: str
+    tokens_in: int
+    tokens_out: int
+    model: str
+    provider: str = "ollama"
+
+
+class OllamaChat:
+    """Chat completion via Ollama's `/api/chat`.
+
+    Used by the LLM extractor in `add-knowledge-graph` to produce
+    structured JSON from a chunk's text. Works against:
+
+      * a local Ollama daemon (e.g. `http://ollama:11434`)
+      * Ollama Cloud (`https://ollama.com`)
+      * any OpenAI-compatible Ollama-shaped drop-in
+
+    Behaviour:
+    - `Authorization: Bearer <key>` is added when `api_key` is non-empty.
+    - When a `response_schema` is passed to `chat()`, the outbound body
+      includes `"format": "json"` so the model returns parseable JSON.
+    - `tokens_in` / `tokens_out` come from the response's
+      `prompt_eval_count` / `eval_count` (the Ollama wire convention).
+      When those fields are absent the counts fall back to character-based
+      estimates so callers always get a usable integer.
+    """
+
+    def __init__(
+        self,
+        *,
+        base_url: str,
+        model: str,
+        api_key: str | None = None,
+        timeout: float = 60.0,
+    ) -> None:
+        self._base = base_url.rstrip("/")
+        self._model = model
+        self._api_key = api_key or None
+        headers: dict[str, str] = {}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+        self._client = httpx.AsyncClient(timeout=timeout, headers=headers)
+
+    @property
+    def model(self) -> str:
+        return self._model
+
+    async def chat(
+        self,
+        *,
+        system: str | None,
+        user: str,
+        response_schema: dict | None = None,
+    ) -> ChatResult:
+        messages: list[dict[str, str]] = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": user})
+        body: dict = {
+            "model": self._model,
+            "messages": messages,
+            "stream": False,
+        }
+        if response_schema is not None:
+            body["format"] = "json"
+        resp = await self._client.post(f"{self._base}/api/chat", json=body)
+        resp.raise_for_status()
+        data = resp.json()
+        content = ((data.get("message") or {}).get("content") or "").strip()
+        tokens_in = int(
+            data.get("prompt_eval_count")
+            or max(1, len(user) // 4 + (len(system) // 4 if system else 0))
+        )
+        tokens_out = int(data.get("eval_count") or max(1, len(content) // 4))
+        return ChatResult(
+            content=content,
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
+            model=self._model,
+        )
+
+    async def close(self) -> None:
+        await self._client.aclose()

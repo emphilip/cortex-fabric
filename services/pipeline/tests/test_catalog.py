@@ -230,3 +230,30 @@ async def test_tombstone_missing_returns_none():
     conn = _Conn(fetchrow_rows=[None])
     out = await _store_with(conn).tombstone(tenant="default", entity_id="missing")
     assert out is None
+
+
+@pytest.mark.asyncio
+async def test_get_evidence_chunks_returns_entity_refs():
+    conn = _Conn(
+        fetch_rows=[
+            [
+                {
+                    "entity_id": "chunk-1",
+                    "title": "README (chunk 0)",
+                    "source_uri": "git://repo/README.md#chunk=0",
+                }
+            ]
+        ]
+    )
+    rows = await _store_with(conn).get_evidence_chunks(
+        tenant="default", edge_id="edge-1"
+    )
+
+    assert rows == [
+        {
+            "entity_id": "chunk-1",
+            "title": "README (chunk 0)",
+            "source_uri": "git://repo/README.md#chunk=0",
+        }
+    ]
+    assert conn.calls[0][2] == ("default", "edge-1")

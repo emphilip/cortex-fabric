@@ -35,6 +35,28 @@ ollama:
   # the key is non-empty; local Ollama servers ignore it.
   api_key: null
 
+providers:
+  # New deployments use the compose-local Ollama instance for embeddings.
+  # The legacy `ollama` block remains the backwards-compatible source when
+  # this block is omitted.
+  embeddings:
+    provider: ollama
+    base_url: http://ollama:11434
+    model: nomic-embed-text
+    api_key: null
+  # Chat is independently configurable and defaults to Ollama Cloud. Supply
+  # the key through HIVE_MIND__PROVIDERS__CHAT__API_KEY.
+  chat:
+    provider: ollama
+    base_url: https://ollama.com
+    model: gemma3:4b
+    api_key: null
+  extraction:
+    enabled: true
+    min_confidence: 0.6
+    timeout_seconds: 30
+    chat_qps: null
+
 retrieval:
   default_top_k: 20
   default_token_budget: 4000

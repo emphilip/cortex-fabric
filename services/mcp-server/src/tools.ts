@@ -4,9 +4,14 @@
 // `not_implemented_in_mvp` error if called.
 
 import { randomUUID } from "node:crypto";
-import type { RetrievalRequest, RetrievalResponse } from "@hive-mind/shared";
+import type {
+  RetrievalRequest,
+  RetrievalResponse,
+  TraverseRequest,
+  TraverseResponse,
+} from "@hive-mind/shared";
 import type { McpConfig } from "./config.js";
-import type { PipelineClient } from "./pipeline-client.js";
+import { PipelineRequestError, type PipelineClient } from "./pipeline-client.js";
 
 export type ToolName =
   | "search"
@@ -61,16 +66,17 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: "hive_mind/traverse_graph",
     description:
-      "Traverse the named-relationship knowledge graph from a starting entity. (Not implemented in thin MVP — knowledge-graph capability ships in a follow-up change.)",
+      "Traverse confirmed named relationships from a starting concept. Candidate edges are excluded unless include_candidates is true.",
     inputSchema: {
       type: "object",
       properties: {
-        entity_id: { type: "string" },
+        concept_id: { type: "string" },
         types: { type: "array", items: { type: "string" } },
-        depth: { type: "integer", default: 2 },
-        limit: { type: "integer", default: 50 },
+        depth: { type: "integer", minimum: 1, maximum: 4, default: 2 },
+        limit: { type: "integer", minimum: 1, maximum: 200, default: 50 },
+        include_candidates: { type: "boolean", default: false },
       },
-      required: ["entity_id"],
+      required: ["concept_id"],
       additionalProperties: false,
     },
   },
@@ -94,6 +100,10 @@ export class NotImplementedInMvpError extends Error {
   code = "not_implemented_in_mvp" as const;
 }
 
+export class ConceptNotFoundError extends Error {
+  code = "concept_not_found" as const;
+}
+
 export interface RetrieveContextArgs {
   query: string;
   top_k?: number;
@@ -111,17 +121,43 @@ export async function callTool(
   name: string,
   args: unknown,
   ctx: ToolCallContext,
-): Promise<RetrievalResponse | Record<string, unknown>> {
+): Promise<RetrievalResponse | TraverseResponse | Record<string, unknown>> {
   switch (name) {
     case "hive_mind/retrieve_for_context":
       return retrieveForContext(args as RetrieveContextArgs, ctx);
+    case "hive_mind/traverse_graph":
+      return traverseGraph(args as TraverseRequest, ctx);
     case "hive_mind/search":
     case "hive_mind/get_entity":
-    case "hive_mind/traverse_graph":
     case "hive_mind/submit_feedback":
       throw new NotImplementedInMvpError(`${name} ships in a follow-up change`);
     default:
       throw new Error(`Unknown tool: ${name}`);
+  }
+}
+
+async function traverseGraph(
+  args: TraverseRequest,
+  ctx: ToolCallContext,
+): Promise<TraverseResponse> {
+  if (!args || typeof args.concept_id !== "string" || !args.concept_id.trim()) {
+    throw new Error("concept_id is required and must be a non-empty string");
+  }
+  try {
+    return await ctx.pipeline.traverse({
+      concept_id: args.concept_id,
+      ...(args.types !== undefined ? { types: args.types } : {}),
+      ...(args.depth !== undefined ? { depth: args.depth } : {}),
+      ...(args.limit !== undefined ? { limit: args.limit } : {}),
+      ...(args.include_candidates !== undefined
+        ? { include_candidates: args.include_candidates }
+        : {}),
+    });
+  } catch (error) {
+    if (error instanceof PipelineRequestError && error.statusCode === 404) {
+      throw new ConceptNotFoundError(`concept not found: ${args.concept_id}`);
+    }
+    throw error;
   }
 }
 

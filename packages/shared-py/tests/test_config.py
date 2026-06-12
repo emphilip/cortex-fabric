@@ -32,3 +32,39 @@ def test_env_overrides_yaml(tmp_path, monkeypatch):
     assert cfg.tenant == "globex"
     assert cfg.identity.principal == "bob"
     assert cfg.identity.roles == ["admin", "auditor"]
+
+
+def test_legacy_ollama_populates_provider_defaults(tmp_path, monkeypatch):
+    cfg_file = tmp_path / "hive-mind.yaml"
+    cfg_file.write_text(
+        "ollama:\n"
+        "  base_url: http://local-ollama:11434\n"
+        "  embedding_model: qwen3-embedding\n"
+        "  api_key: legacy-embedding-key\n"
+    )
+    cfg = load_config(cfg_file)
+    assert cfg.providers.embeddings is not None
+    assert cfg.providers.embeddings.base_url == "http://local-ollama:11434"
+    assert cfg.providers.embeddings.model == "qwen3-embedding"
+    assert cfg.providers.embeddings.api_key == "legacy-embedding-key"
+    assert cfg.providers.chat is not None
+    assert cfg.providers.chat.base_url == "http://local-ollama:11434"
+    assert cfg.providers.chat.model == "gemma3:4b"
+    assert cfg.providers.chat.api_key is None
+
+
+def test_chat_provider_env_overrides(tmp_path, monkeypatch):
+    cfg_file = tmp_path / "hive-mind.yaml"
+    cfg_file.write_text(
+        "providers:\n"
+        "  chat:\n"
+        "    provider: ollama\n"
+        "    base_url: https://ollama.com\n"
+        "    model: gemma3:4b\n"
+    )
+    monkeypatch.setenv("HIVE_MIND__PROVIDERS__CHAT__MODEL", "kimi-k2")
+    monkeypatch.setenv("HIVE_MIND__PROVIDERS__CHAT__API_KEY", "cloud-key")
+    cfg = load_config(cfg_file)
+    assert cfg.providers.chat is not None
+    assert cfg.providers.chat.model == "kimi-k2"
+    assert cfg.providers.chat.api_key == "cloud-key"

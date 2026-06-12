@@ -46,6 +46,18 @@ PROVIDER_ERRORS = Counter(
     labelnames=("provider", "error_code"),
     registry=REGISTRY,
 )
+EXTRACTOR_EDGES = Counter(
+    "hive_mind_extractor_edges_total",
+    "Relationship edges emitted by extractors.",
+    labelnames=("relation", "state"),
+    registry=REGISTRY,
+)
+EXTRACTOR_ERRORS = Counter(
+    "hive_mind_extractor_errors_total",
+    "Graph extractor failures by reason.",
+    labelnames=("reason",),
+    registry=REGISTRY,
+)
 
 
 def record_request(tool: str, outcome: str) -> None:

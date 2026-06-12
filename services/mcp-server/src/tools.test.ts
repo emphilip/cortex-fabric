@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  ConceptNotFoundError,
   NotImplementedInMvpError,
   TOOL_DEFINITIONS,
   callTool,
 } from "./tools.js";
 import type { McpConfig } from "./config.js";
 import type { PipelineClient } from "./pipeline-client.js";
+import { PipelineRequestError } from "./pipeline-client.js";
 
 const config: McpConfig = {
   tenant: "default",
@@ -16,6 +18,7 @@ const config: McpConfig = {
 
 class FakePipeline {
   public lastRequest: any = null;
+  public traverseError: Error | null = null;
   async retrieve(req: any) {
     this.lastRequest = req;
     return {
@@ -27,6 +30,14 @@ class FakePipeline {
   }
   async health() {
     return true;
+  }
+  async traverse(req: any) {
+    this.lastRequest = req;
+    if (this.traverseError) throw this.traverseError;
+    return {
+      nodes: [{ concept_id: req.concept_id, name: "Start" }],
+      edges: [],
+    };
   }
 }
 
@@ -83,12 +94,58 @@ describe("stub tools", () => {
   it.each([
     "hive_mind/search",
     "hive_mind/get_entity",
-    "hive_mind/traverse_graph",
     "hive_mind/submit_feedback",
   ])("%s throws NotImplementedInMvpError", async (name) => {
     const pipeline = new FakePipeline() as unknown as PipelineClient;
     await expect(callTool(name, {}, { config, pipeline })).rejects.toBeInstanceOf(
       NotImplementedInMvpError,
     );
+  });
+});
+
+describe("traverse_graph", () => {
+  it("forwards traversal arguments and returns the pipeline payload", async () => {
+    const pipeline = new FakePipeline() as unknown as PipelineClient;
+    const result = await callTool(
+      "hive_mind/traverse_graph",
+      {
+        concept_id: "c1",
+        types: ["depends_on"],
+        depth: 3,
+        limit: 25,
+        include_candidates: true,
+      },
+      { config, pipeline },
+    );
+
+    expect((pipeline as any).lastRequest).toEqual({
+      concept_id: "c1",
+      types: ["depends_on"],
+      depth: 3,
+      limit: 25,
+      include_candidates: true,
+    });
+    expect((result as any).nodes[0].concept_id).toBe("c1");
+  });
+
+  it("maps a pipeline 404 to concept_not_found", async () => {
+    const fake = new FakePipeline();
+    fake.traverseError = new PipelineRequestError(404, '{"detail":"not found"}');
+    const pipeline = fake as unknown as PipelineClient;
+
+    await expect(
+      callTool(
+        "hive_mind/traverse_graph",
+        { concept_id: "missing" },
+        { config, pipeline },
+      ),
+    ).rejects.toBeInstanceOf(ConceptNotFoundError);
+  });
+
+  it("rejects a missing concept id", async () => {
+    const pipeline = new FakePipeline() as unknown as PipelineClient;
+    await expect(
+      callTool("hive_mind/traverse_graph", {}, { config, pipeline }),
+    ).rejects.toThrow(/concept_id/);
   });
 });

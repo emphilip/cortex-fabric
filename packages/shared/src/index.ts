@@ -176,3 +176,107 @@ export interface IngestionRun {
   chunks?: number;
   error?: string | null;
 }
+
+// --- Knowledge graph -------------------------------------------------------
+
+export type EdgeState = "candidate" | "confirmed" | "tombstoned";
+
+export interface RelationshipType {
+  name: string;
+  description: string;
+  inverse?: string | null;
+  directed: boolean;
+  deprecated_at?: string | null;
+}
+
+export interface ConceptListItem {
+  concept_id: string;
+  tenant: string;
+  name: string;
+  state: EdgeState;
+  confidence?: number | null;
+  aliases: readonly string[];
+  symbol_id?: string | null;
+  symbol_kind?: string | null;
+  updated_at: string;
+  tombstoned_at?: string | null;
+}
+
+export interface Concept extends ConceptListItem {
+  dedupe_key: string;
+  description?: string | null;
+  extractor_version?: string | null;
+  source_entity_id?: string | null;
+  created_at: string;
+}
+
+export interface RelationshipEdge {
+  edge_id: string;
+  tenant: string;
+  type: string;
+  from_concept_id: string;
+  to_concept_id: string;
+  state: EdgeState;
+  confidence: number;
+  extractor_version?: string | null;
+  created_at: string;
+  updated_at: string;
+  tombstoned_at?: string | null;
+}
+
+export interface Neighbour {
+  edge: RelationshipEdge;
+  peer: ConceptListItem;
+  evidence_entity_ids: readonly string[];
+}
+
+export interface ConceptDetail extends Concept {
+  neighbours_confirmed: readonly Neighbour[];
+  neighbours_candidate: readonly Neighbour[];
+}
+
+export interface TraverseRequest {
+  concept_id: string;
+  types?: readonly string[] | null;
+  depth?: number;
+  limit?: number;
+  include_candidates?: boolean;
+}
+
+export interface TraverseResponse {
+  nodes: readonly ConceptListItem[];
+  edges: readonly RelationshipEdge[];
+}
+
+export interface ExtractedConcept {
+  name: string;
+  description?: string | null;
+  aliases?: readonly string[];
+}
+
+export interface ExtractedRelation {
+  from: string;
+  relation: string;
+  to: string;
+  evidence_span?: string | null;
+  confidence: number;
+}
+
+export interface ExtractionResult {
+  concepts: readonly ExtractedConcept[];
+  relations: readonly ExtractedRelation[];
+}
+
+export interface GraphAuditRow {
+  id: number;
+  created_at: string;
+  actor: string;
+  tenant: string;
+  target_kind: "concept" | "edge" | "vocab";
+  target_id: string;
+  from_state?: string | null;
+  to_state?: string | null;
+  reason?: string | null;
+  before?: Record<string, unknown> | null;
+  after?: Record<string, unknown> | null;
+}

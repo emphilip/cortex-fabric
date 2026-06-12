@@ -19,7 +19,9 @@ from opentelemetry import trace
 from hive_mind_ingestion.chunking import chunk_code_by_symbols, chunk_text, is_code_path
 from hive_mind_ingestion.connectors.git import GitDocument
 from hive_mind_ingestion.graph_writer import write_code_graph
-from hive_mind_pipeline.providers import OllamaEmbeddings
+from hive_mind_ingestion.text_graph_writer import load_vocabulary, write_text_graph
+from hive_mind_pipeline.graph.extract import extract_for_chunk
+from hive_mind_pipeline.providers import OllamaChat, OllamaEmbeddings
 from hive_mind_pipeline.storage.catalog import CatalogStore
 from hive_mind_pipeline.storage.vector import VectorIndex
 
@@ -43,7 +45,24 @@ async def ingest_documents(
         model=cfg.ollama.embedding_model,
         api_key=cfg.ollama.api_key,
     )
+    # Chat client for LLM-based text extraction. The text extractor is the
+    # only caller; for code files we use graphifyy and skip chat entirely.
+    chat_cfg = cfg.providers.chat
+    chat: OllamaChat | None = None
+    vocabulary: list[str] = []
+    if cfg.providers.extraction.enabled and chat_cfg is not None:
+        chat = OllamaChat(
+            base_url=chat_cfg.base_url,
+            model=chat_cfg.model,
+            api_key=chat_cfg.api_key,
+        )
     await catalog.connect()
+    if chat is not None:
+        try:
+            vocabulary = await load_vocabulary(catalog, cfg.tenant)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("could not load relationship vocabulary: %s", exc)
+            chat = None  # without vocab the extractor would emit garbage
     parents = 0
     chunks_total = 0
     try:
@@ -128,6 +147,38 @@ async def ingest_documents(
                 )
                 chunks_total += 1
 
+                # LLM-based text extraction. Code chunks are skipped because
+                # the deterministic graphifyy result for the whole file is
+                # written below. For text chunks (markdown, yaml, etc.), each
+                # chunk individually gets the LLM extractor. Best-effort —
+                # a failed chunk doesn't abort the loop.
+                if not code and chat is not None and vocabulary:
+                    try:
+                        result, _telemetry = await extract_for_chunk(
+                            chunk_text=ch.text,
+                            chunk_entity_id=chunk_id,
+                            vocabulary=vocabulary,
+                            chat=chat,
+                            tenant=cfg.tenant,
+                            min_confidence=cfg.providers.extraction.min_confidence,
+                            timeout_seconds=cfg.providers.extraction.timeout_seconds,
+                        )
+                        if result.concepts or result.relations:
+                            await write_text_graph(
+                                catalog=catalog,
+                                tenant=cfg.tenant,
+                                chunk_entity_id=chunk_id,
+                                result=result,
+                                extractor_version=f"text-extractor/{chat.model}",
+                            )
+                    except Exception as exc:  # noqa: BLE001
+                        log.info(
+                            "text extractor skipped for %s chunk %d: %s",
+                            doc.source_uri,
+                            ch_index,
+                            exc,
+                        )
+
             # Persist the graph for code files. Best-effort — a graph write
             # failure must NOT roll back the chunk inserts above.
             if code and code_graph is not None:
@@ -146,6 +197,8 @@ async def ingest_documents(
         await catalog.close()
         await vector.close()
         await embeddings.close()
+        if chat is not None:
+            await chat.close()
     return parents, chunks_total
 
 

@@ -36,6 +36,37 @@ class OllamaCfg(BaseModel):
     api_key: str | None = None
 
 
+# --- Providers --------------------------------------------------------------
+# The thin MVP had one model caller (embeddings). With add-knowledge-graph
+# adding an LLM extractor for non-code chunks, we now have two. A small
+# per-capability config block keeps each caller pointable at a different
+# host/model/key without growing a full provider abstraction yet.
+
+
+class ProviderEndpoint(BaseModel):
+    """One model caller's wire config."""
+
+    provider: str = "ollama"
+    base_url: str
+    model: str
+    api_key: str | None = None
+
+
+class ExtractionCfg(BaseModel):
+    """Knobs for the LLM-based text extractor."""
+
+    enabled: bool = True
+    min_confidence: float = 0.6
+    timeout_seconds: float = 30.0
+    chat_qps: float | None = None  # null = unbounded
+
+
+class ProvidersCfg(BaseModel):
+    embeddings: ProviderEndpoint | None = None
+    chat: ProviderEndpoint | None = None
+    extraction: ExtractionCfg = Field(default_factory=ExtractionCfg)
+
+
 class RetrievalCfg(BaseModel):
     default_top_k: int = 20
     default_token_budget: int = 4000
@@ -66,10 +97,34 @@ class HiveMindConfig(BaseModel):
     qdrant: QdrantCfg = Field(default_factory=QdrantCfg)
     valkey: ValkeyCfg = Field(default_factory=ValkeyCfg)
     ollama: OllamaCfg = Field(default_factory=OllamaCfg)
+    providers: ProvidersCfg = Field(default_factory=ProvidersCfg)
     retrieval: RetrievalCfg = Field(default_factory=RetrievalCfg)
     audit: AuditCfg = Field(default_factory=AuditCfg)
     telemetry: TelemetryCfg = Field(default_factory=TelemetryCfg)
     ingestion: IngestionCfg = Field(default_factory=IngestionCfg)
+
+    def model_post_init(self, _ctx: Any) -> None:
+        # Back-compat: if `providers.embeddings` is unset, derive it from
+        # the legacy `ollama` block so existing deployments don't need a
+        # config rewrite. The reverse — populating `providers` THEN reading
+        # `ollama` — is also fine because `ollama` keeps its own fields.
+        if self.providers.embeddings is None:
+            self.providers.embeddings = ProviderEndpoint(
+                provider="ollama",
+                base_url=self.ollama.base_url,
+                model=self.ollama.embedding_model,
+                api_key=self.ollama.api_key,
+            )
+        if self.providers.chat is None:
+            # Backwards-compatible deployments that only have the legacy
+            # Ollama block remain local. The checked-in YAML explicitly opts
+            # new deployments into Ollama Cloud chat.
+            self.providers.chat = ProviderEndpoint(
+                provider="ollama",
+                base_url=self.ollama.base_url,
+                model="gemma3:4b",
+                api_key=None,
+            )
 
 
 _ENV_PREFIX = "HIVE_MIND__"

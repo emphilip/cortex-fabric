@@ -11,7 +11,12 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { loadConfig } from "./config.js";
 import { PipelineClient } from "./pipeline-client.js";
-import { NotImplementedInMvpError, TOOL_DEFINITIONS, callTool } from "./tools.js";
+import {
+  ConceptNotFoundError,
+  NotImplementedInMvpError,
+  TOOL_DEFINITIONS,
+  callTool,
+} from "./tools.js";
 
 async function main() {
   const config = loadConfig();
@@ -62,7 +67,10 @@ async function main() {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
     } catch (err) {
-      const code = err instanceof NotImplementedInMvpError ? err.code : "error";
+      const code =
+        err instanceof NotImplementedInMvpError || err instanceof ConceptNotFoundError
+          ? err.code
+          : "error";
       const message = err instanceof Error ? err.message : String(err);
       return {
         isError: true,

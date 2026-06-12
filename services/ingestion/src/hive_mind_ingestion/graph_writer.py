@@ -31,6 +31,7 @@ from typing import Any
 
 import graphify
 
+from hive_mind_pipeline.graph.age import reflect_concept, reflect_edge
 from hive_mind_pipeline.storage.catalog import CatalogStore
 
 log = logging.getLogger(__name__)
@@ -152,6 +153,13 @@ async def write_code_graph(
                     kind,
                     file_entity_id,
                 )
+                await reflect_concept(
+                    conn,
+                    concept_id=concept_id,
+                    tenant=tenant,
+                    name=label,
+                    state="confirmed",
+                )
                 concepts_written += 1
 
             for edge in edges:
@@ -188,6 +196,13 @@ async def write_code_graph(
                         _extractor_version(),
                         file_entity_id,
                     )
+                    await reflect_concept(
+                        conn,
+                        concept_id=target_concept_id,
+                        tenant=tenant,
+                        name=target_label,
+                        state="confirmed",
+                    )
                     to_node = (target_concept_id, target_label)
                     id_to_concept[edge["target"]] = to_node
                     concepts_written += 1
@@ -220,6 +235,16 @@ async def write_code_graph(
                     state,
                     conf_value,
                     _extractor_version(),
+                )
+                await reflect_edge(
+                    conn,
+                    edge_id=edge_id,
+                    tenant=tenant,
+                    relationship_type=mapped,
+                    from_concept_id=from_node[0],
+                    to_concept_id=to_node[0],
+                    state=state,
+                    confidence=conf_value,
                 )
                 await conn.execute(
                     """

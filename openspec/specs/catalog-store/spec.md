@@ -3,9 +3,7 @@
 ## Purpose
 
 Store and manage tenant-scoped knowledge entities, including indexed administration queries and soft deletion.
-
 ## Requirements
-
 ### Requirement: Direct query
 
 The catalog store SHALL accept structured filter queries from the admin UI via the pipeline's `GET /entities` endpoint and MUST evaluate them using existing indexes (`entity_classification_ix`, `entity_freshness_ix`, the `entity_source_uri_uq` covering source). No body-text scan is permitted for the admin list query.
@@ -45,3 +43,30 @@ The catalog store SHALL expose a function callable from the pipeline that lists 
 - **WHEN** the pipeline calls the list function with only `tenant` and pagination
 - **THEN** all entities for the tenant are eligible
 - **AND** results are ordered by `updated_at DESC`
+
+### Requirement: Symbol-aware chunk id derivation
+
+For chunks produced by the symbol chunker (code files processed by `chunk_code_by_symbols`), the catalog store SHALL derive the chunk `entity_id` as `uuid5(_SYMBOL_NS, f"{parent_entity_id}:{symbol_id}")` where `symbol_id` is graphifyy's stable per-symbol identifier. For oversized symbols that get paragraph-split, the seed MUST include the sub-chunk index: `uuid5(_SYMBOL_NS, f"{parent_entity_id}:{symbol_id}:{sub_index}")`.
+
+For chunks produced by the paragraph chunker (text, markdown, future PDF / HTML / MDX), the catalog store SHALL continue to derive the chunk `entity_id` as `uuid5(_CHUNK_NS, f"{parent_entity_id}:{chunk_index}")` as established by `bootstrap-thin-mvp`.
+
+Both schemes MUST be deterministic: re-ingest of an unchanged input MUST produce the same chunk id.
+
+#### Scenario: Stable symbol-chunk id across re-ingest
+
+- **WHEN** a Python file with three functions is ingested twice without changes
+- **THEN** the same three `entity_id` values appear in `hive_mind.entity` both times
+- **AND** the upsert path is taken (no duplicate rows)
+
+#### Scenario: Adding a function above existing ones does not renumber
+
+- **WHEN** a developer adds a new function `helper_a` at the top of a Python file that previously had `existing_b` and `existing_c`
+- **THEN** the chunks for `existing_b` and `existing_c` retain their original `entity_id` values
+- **AND** a new chunk row is created for `helper_a`
+- **AND** the vector index does not require re-upserting the unchanged chunks
+
+#### Scenario: Oversized symbol sub-chunks share the parent symbol id
+
+- **WHEN** a function whose body exceeds the symbol size limit is paragraph-split into N sub-chunks
+- **THEN** each sub-chunk row carries the same parent symbol id in metadata
+- **AND** each sub-chunk's entity_id is distinct via the sub_index seed

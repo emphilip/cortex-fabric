@@ -26,10 +26,12 @@ from opentelemetry import trace
 from starlette.routing import Route
 
 from hive_mind_pipeline import admin_routes
+from hive_mind_pipeline.graph import routes as graph_routes
 from hive_mind_pipeline.providers import OllamaEmbeddings
 from hive_mind_pipeline.stages import assemble, hybrid_retrieval, identity
 from hive_mind_pipeline.storage.audit import AuditStore
 from hive_mind_pipeline.storage.catalog import CatalogStore
+from hive_mind_pipeline.storage.graph import GraphStore
 from hive_mind_pipeline.storage.vector import VectorIndex
 from hive_mind_pipeline.util import estimate_tokens, hash_context
 
@@ -44,6 +46,7 @@ async def lifespan(app: FastAPI):
     tracer = setup_otel("hive-mind-pipeline", cfg.telemetry.service_namespace)
     catalog = CatalogStore(cfg.postgres.url)
     audit = AuditStore(cfg.postgres.url)
+    graph = GraphStore(cfg.postgres.url)
     vector = VectorIndex(
         url=cfg.qdrant.url,
         collection_prefix=cfg.qdrant.collection_prefix,
@@ -59,10 +62,12 @@ async def lifespan(app: FastAPI):
     ingestion_client = httpx.AsyncClient(base_url=ingestion_url, timeout=30.0)
     await catalog.connect()
     await audit.connect()
+    await graph.connect()
     app.state.cfg = cfg
     app.state.tracer = tracer
     app.state.catalog = catalog
     app.state.audit = audit
+    app.state.graph = graph
     app.state.vector = vector
     app.state.embeddings = embeddings
     app.state.ingestion_client = ingestion_client
@@ -71,6 +76,7 @@ async def lifespan(app: FastAPI):
     finally:
         await catalog.close()
         await audit.close()
+        await graph.close()
         await vector.close()
         await embeddings.close()
         await ingestion_client.aclose()
@@ -79,6 +85,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="hive-mind-pipeline", lifespan=lifespan)
 app.router.routes.append(Route("/metrics", metrics_app))
 app.include_router(admin_routes.router)
+app.include_router(graph_routes.router)
 
 
 @app.get("/healthz")
