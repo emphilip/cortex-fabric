@@ -11,6 +11,7 @@ import type {
   ConceptListItem,
   RelationshipEdge,
   RelationshipType,
+  TraverseResponse,
   VectorSearchResponse,
 } from "@hive-mind/shared";
 
@@ -197,6 +198,29 @@ export async function listGraphEdges(params: {
   const res = await fetch(`${PIPELINE_URL}/graph/edges?${qs}`, NO_STORE);
   if (!res.ok) return { items: [], total: 0 };
   return (await res.json()) as { items: GraphEdgeItem[]; total: number };
+}
+
+export interface TraverseParams {
+  conceptId: string;
+  depth?: number;
+  types?: string;
+  includeCandidates?: boolean;
+  limit?: number;
+}
+
+export function traverseQuery(params: TraverseParams): string {
+  const qs = new URLSearchParams({ concept_id: params.conceptId });
+  if (params.depth !== undefined) qs.set("depth", String(params.depth));
+  if (params.types) qs.set("types", params.types);
+  if (params.includeCandidates) qs.set("include_candidates", "true");
+  if (params.limit !== undefined) qs.set("limit", String(params.limit));
+  return qs.toString();
+}
+
+export async function traverseGraph(params: TraverseParams): Promise<TraverseResponse> {
+  const res = await fetch(`${PIPELINE_URL}/graph/traverse?${traverseQuery(params)}`, NO_STORE);
+  if (!res.ok) return { nodes: [], edges: [] };
+  return (await res.json()) as TraverseResponse;
 }
 
 export async function listGraphVocabulary(): Promise<RelationshipType[]> {

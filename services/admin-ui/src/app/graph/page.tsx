@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { VocabCreateForm } from "./GraphActions";
+import { GraphExplorer } from "./GraphExplorer";
 import { getGraphConcept, listGraphConcepts, listGraphEdges, listGraphVocabulary } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -14,11 +15,14 @@ const TABS = [
   { value: "concepts", label: "Concepts" },
   { value: "candidates", label: "Candidate review" },
   { value: "vocabulary", label: "Vocabulary" },
+  { value: "map", label: "Map" },
 ];
 
-export default async function GraphPage({ searchParams }: { searchParams: Promise<{ tab?: string; concept_id?: string; search?: string }> }) {
+export default async function GraphPage({ searchParams }: { searchParams: Promise<{ tab?: string; concept_id?: string; search?: string; focus?: string; depth?: string; candidates?: string }> }) {
   const params = await searchParams;
   const tab = params.tab || "concepts";
+  const depth = Math.min(Math.max(Number(params.depth) || 2, 1), 3);
+  const includeCandidates = params.candidates === "1";
   const [concepts, candidates, vocabulary, detail] = await Promise.all([
     listGraphConcepts({ state: "confirmed,candidate", search: params.search, limit: 50 }),
     listGraphEdges({ state: "candidate", limit: 50 }),
@@ -52,6 +56,15 @@ export default async function GraphPage({ searchParams }: { searchParams: Promis
           <h2 className="mb-2 text-lg font-semibold">Vocabulary</h2>
           <VocabCreateForm />
           {vocabulary.map((item) => <VocabRow key={item.name} item={item} />)}
+        </div>
+      ) : tab === "map" ? (
+        <div>
+          <h2 className="mb-2 text-lg font-semibold">Map</h2>
+          <GraphExplorer
+            initialFocus={params.focus || concepts.items.find((c) => c.state === "confirmed")?.concept_id || concepts.items[0]?.concept_id || null}
+            initialDepth={depth}
+            initialCandidates={includeCandidates}
+          />
         </div>
       ) : (
         <div>
