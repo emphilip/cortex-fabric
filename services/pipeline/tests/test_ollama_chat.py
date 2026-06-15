@@ -6,7 +6,7 @@ import pytest
 import respx
 from httpx import Response
 
-from hive_mind_pipeline.providers import OllamaChat
+from cortex_pipeline.providers import OllamaChat
 
 
 @pytest.mark.asyncio

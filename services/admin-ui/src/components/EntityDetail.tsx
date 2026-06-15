@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Entity } from "@hive-mind/shared";
+import type { Entity } from "@cortex/shared";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

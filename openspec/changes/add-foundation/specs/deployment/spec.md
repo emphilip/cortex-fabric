@@ -2,7 +2,7 @@
 
 ### Requirement: Single-command bring-up via Docker Compose
 
-The repo SHALL ship a Docker Compose stack that brings up all required services with a single command (`docker compose up`). The stack SHALL include PostgreSQL+AGE, Qdrant, Valkey, OPA, the OpenTelemetry stack (collector, Tempo, Loki, Prometheus, Grafana), and the hive-mind services (MCP server, pipeline, enrichment workers, ingestion, admin UI).
+The repo SHALL ship a Docker Compose stack that brings up all required services with a single command (`docker compose up`). The stack SHALL include PostgreSQL+AGE, Qdrant, Valkey, OPA, the OpenTelemetry stack (collector, Tempo, Loki, Prometheus, Grafana), and the cortex services (MCP server, pipeline, enrichment workers, ingestion, admin UI).
 
 #### Scenario: Fresh clone bring-up
 
@@ -21,11 +21,11 @@ The compose stack SHALL expose two profiles: `dev` (mounts source, hot-reloads, 
 
 ### Requirement: Configuration model
 
-A single `hive-mind.yaml` file SHALL configure the deployment: tenant slug, model providers per capability, connector configs, freshness thresholds, audit retention, telemetry endpoints, and entitlement defaults. Environment variables override file values.
+A single `cortex.yaml` file SHALL configure the deployment: tenant slug, model providers per capability, connector configs, freshness thresholds, audit retention, telemetry endpoints, and entitlement defaults. Environment variables override file values.
 
 #### Scenario: Override via env
 
-- **WHEN** `HIVE_MIND__EMBEDDINGS__PROVIDER=anthropic` is set
+- **WHEN** `CORTEX__EMBEDDINGS__PROVIDER=anthropic` is set
 - **THEN** the embedding provider in effect at runtime is the Anthropic adapter, regardless of the file value
 
 ### Requirement: Health and readiness

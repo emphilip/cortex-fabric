@@ -5,14 +5,14 @@ import json
 
 import pytest
 
-from hive_mind_pipeline.graph.extract import (
+from cortex_pipeline.graph.extract import (
     build_prompt,
     extract_for_chunk,
     filter_result,
     parse_response,
 )
-from hive_mind_pipeline.providers import ChatResult, OllamaChat
-from hive_mind_shared import ExtractionResult
+from cortex_pipeline.providers import ChatResult, OllamaChat
+from cortex_shared import ExtractionResult
 
 
 VOCAB = ["depends_on", "defined_in", "mentions", "related_to", "causes"]

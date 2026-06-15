@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from hive_mind_pipeline.stages.assemble import run
-from hive_mind_pipeline.stages.hybrid_retrieval import Candidate
+from cortex_pipeline.stages.assemble import run
+from cortex_pipeline.stages.hybrid_retrieval import Candidate
 
 
 def _c(eid: str, text: str, classification: str = "internal", score: float = 1.0) -> Candidate:

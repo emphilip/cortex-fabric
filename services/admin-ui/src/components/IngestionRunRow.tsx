@@ -1,4 +1,4 @@
-import type { IngestionRun } from "@hive-mind/shared";
+import type { IngestionRun } from "@cortex/shared";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 

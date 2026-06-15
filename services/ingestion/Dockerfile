@@ -18,9 +18,9 @@ COPY services/ingestion /app/services/ingestion
 
 RUN uv sync --no-dev --all-packages
 
-ENV HIVE_MIND_CONFIG=/app/hive-mind.yaml
-COPY hive-mind.yaml /app/hive-mind.yaml
+ENV CORTEX_CONFIG=/app/cortex.yaml
+COPY cortex.yaml /app/cortex.yaml
 
 EXPOSE 8100
-CMD ["uv", "run", "--package", "hive-mind-ingestion", "uvicorn", \
-     "hive_mind_ingestion.server:app", "--host", "0.0.0.0", "--port", "8100"]
+CMD ["uv", "run", "--package", "cortex-ingestion", "uvicorn", \
+     "cortex_ingestion.server:app", "--host", "0.0.0.0", "--port", "8100"]

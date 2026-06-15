@@ -1,5 +1,5 @@
 {
-  "name": "hive-mind",
+  "name": "cortex-context-fabric",
   "version": "0.0.0",
   "private": true,
   "description": "Open-source, self-hostable enterprise context engineering, exposed as MCP.",

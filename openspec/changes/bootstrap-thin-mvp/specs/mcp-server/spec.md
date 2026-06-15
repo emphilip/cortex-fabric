@@ -4,24 +4,24 @@
 
 The system SHALL expose an MCP server (TypeScript) that advertises the tools `search`, `retrieve_for_context`, `get_entity`, `traverse_graph`, and `submit_feedback`. Each tool SHALL declare a JSON schema for its inputs and outputs.
 
-**Thin-MVP scope:** only `hive_mind/retrieve_for_context` is functional end-to-end. The other four tools are advertised in `tools/list` so MCP clients see the v0 surface, but a `tools/call` for any of them SHALL return a structured error with `code = "not_implemented_in_mvp"` and a `message` naming the follow-up change that implements it.
+**Thin-MVP scope:** only `cortex/retrieve_for_context` is functional end-to-end. The other four tools are advertised in `tools/list` so MCP clients see the v0 surface, but a `tools/call` for any of them SHALL return a structured error with `code = "not_implemented_in_mvp"` and a `message` naming the follow-up change that implements it.
 
 #### Scenario: Client discovers available tools
 
 - **WHEN** an MCP client calls `tools/list` against the server
 - **THEN** the server returns the five tools above with input and output schemas
-- **AND** each tool name is namespaced under `hive_mind/<tool>`
+- **AND** each tool name is namespaced under `cortex/<tool>`
 
 #### Scenario: `retrieve_for_context` returns structured payload
 
-- **WHEN** a client calls `hive_mind/retrieve_for_context` with a query and a token budget
+- **WHEN** a client calls `cortex/retrieve_for_context` with a query and a token budget
 - **THEN** the response contains an ordered list of context fragments, each with `id`, `source_uri`, `score`, `entitlement_classification`, and `tokens`
 - **AND** the response contains a `correlation_id` matching the audit record for the request
 - **AND** the total tokens across fragments does not exceed the requested budget
 
 #### Scenario: Deferred tools return a structured error
 
-- **WHEN** a client calls any of `hive_mind/search`, `hive_mind/get_entity`, `hive_mind/traverse_graph`, or `hive_mind/submit_feedback`
+- **WHEN** a client calls any of `cortex/search`, `cortex/get_entity`, `cortex/traverse_graph`, or `cortex/submit_feedback`
 - **THEN** the server returns `isError: true` with content describing `code = "not_implemented_in_mvp"`
 - **AND** the call does NOT reach the retrieval pipeline
 

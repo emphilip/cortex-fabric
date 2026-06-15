@@ -1,4 +1,4 @@
-name: hive-mind
+name: cortex
 
 services:
   # -----------------------------------------------------------------------
@@ -8,17 +8,17 @@ services:
     build:
       context: ../postgres
       dockerfile: Dockerfile
-    image: hive-mind/postgres-age:local
+    image: cortex/postgres-age:local
     environment:
-      POSTGRES_USER: hive
-      POSTGRES_PASSWORD: hive
-      POSTGRES_DB: hivemind
+      POSTGRES_USER: cortex
+      POSTGRES_PASSWORD: cortex
+      POSTGRES_DB: cortex
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hive -d hivemind"]
+      test: ["CMD-SHELL", "pg_isready -U cortex -d cortex"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -52,6 +52,37 @@ services:
       retries: 20
     profiles: [dev]
 
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.123.0
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ../otel/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "${CORTEX__OTEL__HTTP_HOST_PORT:-4318}:4318"
+      - "${CORTEX__OTEL__HEALTH_HOST_PORT:-13133}:13133"
+    healthcheck:
+      test: ["CMD", "/otelcol-contrib", "validate", "--config=/etc/otelcol-contrib/config.yaml"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    profiles: [dev]
+
+  smoke-chat:
+    image: python:3.12-slim
+    command: ["python", "/opt/cortex/smoke-chat/server.py"]
+    volumes:
+      - ../../tests/smoke/chat_stub/server.py:/opt/cortex/smoke-chat/server.py:ro
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:11434/healthz', timeout=2)"
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    profiles: [dev]
+
   # -----------------------------------------------------------------------
   # Embeddings backend (local Ollama; Cloud is documented but unused in v0
   # because /api/embed is gated for the reference account — see
@@ -59,20 +90,20 @@ services:
   # -----------------------------------------------------------------------
   ollama:
     image: ollama/ollama:0.30.7
-    entrypoint: ["/bin/sh", "/opt/hive-mind/ollama-entrypoint.sh"]
+    entrypoint: ["/bin/sh", "/opt/cortex/ollama-entrypoint.sh"]
     environment:
-      OLLAMA_EMBEDDING_MODEL: ${HIVE_MIND__OLLAMA__EMBEDDING_MODEL:-nomic-embed-text}
+      OLLAMA_EMBEDDING_MODEL: ${CORTEX__OLLAMA__EMBEDDING_MODEL:-nomic-embed-text}
     volumes:
       - ollama-data:/root/.ollama
-      - ../ollama/entrypoint.sh:/opt/hive-mind/ollama-entrypoint.sh:ro
-      - ../ollama/healthcheck.sh:/opt/hive-mind/ollama-healthcheck.sh:ro
+      - ../ollama/entrypoint.sh:/opt/cortex/ollama-entrypoint.sh:ro
+      - ../ollama/healthcheck.sh:/opt/cortex/ollama-healthcheck.sh:ro
     ports:
       - "11434:11434"
     healthcheck:
       # Healthy only after the configured embedding model has been pulled.
       # The entrypoint script does the pull on first start; the healthcheck
       # interval + retries below tolerate a one-time ~270 MB download.
-      test: ["CMD", "/bin/sh", "/opt/hive-mind/ollama-healthcheck.sh"]
+      test: ["CMD", "/bin/sh", "/opt/cortex/ollama-healthcheck.sh"]
       interval: 10s
       timeout: 5s
       retries: 60
@@ -86,13 +117,14 @@ services:
     build:
       context: ../..
       dockerfile: services/pipeline/Dockerfile
-    image: hive-mind/pipeline:local
+    image: cortex/pipeline:local
     env_file: ../../.env
     depends_on:
       postgres: { condition: service_healthy }
       qdrant:   { condition: service_healthy }
       valkey:   { condition: service_healthy }
       ollama:   { condition: service_healthy }
+      otel-collector: { condition: service_healthy }
     ports:
       - "8000:8000"
     healthcheck:
@@ -106,25 +138,28 @@ services:
     build:
       context: ../..
       dockerfile: services/mcp-server/Dockerfile
-    image: hive-mind/mcp-server:local
+    image: cortex/mcp-server:local
     env_file: ../../.env
     depends_on:
       pipeline: { condition: service_healthy }
     ports:
       # Host port is configurable to dodge collisions; container always 8080.
-      - "${HIVE_MIND__MCP__HOST_PORT:-8080}:8080"
+      - "${CORTEX__MCP__HOST_PORT:-8080}:8080"
     profiles: [dev]
 
   ingestion:
     build:
       context: ../..
       dockerfile: services/ingestion/Dockerfile
-    image: hive-mind/ingestion:local
+    image: cortex/ingestion:local
     env_file: ../../.env
     depends_on:
       postgres: { condition: service_healthy }
       qdrant:   { condition: service_healthy }
       ollama:   { condition: service_healthy }
+      otel-collector: { condition: service_healthy }
+    volumes:
+      - ../../tests/smoke/fixtures/knowledge-repo:/opt/cortex/smoke-fixture:ro
     ports:
       - "8100:8100"
     healthcheck:
@@ -138,7 +173,7 @@ services:
     build:
       context: ../..
       dockerfile: services/admin-ui/Dockerfile
-    image: hive-mind/admin-ui:local
+    image: cortex/admin-ui:local
     env_file: ../../.env
     depends_on:
       pipeline: { condition: service_healthy }

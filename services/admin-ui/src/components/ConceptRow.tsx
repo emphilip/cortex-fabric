@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ConceptListItem } from "@hive-mind/shared";
+import type { ConceptListItem } from "@cortex/shared";
 import { cn } from "@/lib/utils";
 
 export function ConceptRow({ concept }: { concept: ConceptListItem }) {

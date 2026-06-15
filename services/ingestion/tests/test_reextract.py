@@ -4,8 +4,8 @@ from datetime import datetime
 
 from click.testing import CliRunner
 
-from hive_mind_ingestion import cli
-from hive_mind_ingestion.reextract import (
+from cortex_ingestion import cli
+from cortex_ingestion.reextract import (
     ReextractSummary,
     current_extractor_version,
     version_is_current_or_newer,

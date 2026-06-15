@@ -1,5 +1,5 @@
 [project]
-name = "hive-mind"
+name = "cortex-context-fabric"
 version = "0.0.0"
 description = "Open-source, self-hostable enterprise context engineering, exposed as MCP."
 readme = "README.md"
@@ -14,7 +14,7 @@ members = [
 ]
 
 [tool.uv.sources]
-hive-mind-shared = { workspace = true }
+cortex-shared = { workspace = true }
 
 [tool.ruff]
 line-length = 100

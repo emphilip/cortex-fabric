@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from hive_mind_pipeline.storage.vector import VectorIndex
+from cortex_pipeline.storage.vector import VectorIndex
 
 
 @dataclass

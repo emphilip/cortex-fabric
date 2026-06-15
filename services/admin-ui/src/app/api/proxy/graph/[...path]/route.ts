@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const PIPELINE_URL =
-  process.env.HIVE_MIND__PIPELINE__URL || "http://pipeline:8000";
+  process.env.CORTEX__PIPELINE__URL || "http://pipeline:8000";
 
 async function forward(
   request: NextRequest,

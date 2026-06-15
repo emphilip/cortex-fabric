@@ -9,7 +9,7 @@ The catalog SHALL maintain a registry row for every retrievable item with at min
 #### Scenario: Connector ingests a document in v0
 
 - **WHEN** the git connector ingests a new file
-- **THEN** an `hive_mind.entity` row is created with the required fields and a populated `body`
+- **THEN** an `cortex.entity` row is created with the required fields and a populated `body`
 - **AND** the `entity_id` is stable across re-ingestion of the same `(tenant, source, source_uri)`
 
 ### Requirement: Source lineage

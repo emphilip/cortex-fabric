@@ -1,0 +1,76 @@
+# Cortex — single-tenant deployment configuration.
+# Environment variables override values here using the convention
+#   CORTEX__<SECTION>__<KEY> = value
+# (double underscore separates nesting levels).
+tenant: default
+
+identity:
+  # v0 STUB. Replace with real auth before any non-dev deployment.
+  principal: local-dev
+  roles: [admin, reader]
+
+postgres:
+  url: postgresql://cortex:cortex@postgres:5432/cortex
+
+qdrant:
+  url: http://qdrant:6333
+  collection_prefix: "default__"
+  vector_size: 768   # nomic-embed-text
+  distance: cosine
+
+valkey:
+  url: redis://valkey:6379/0
+
+ollama:
+  # Default targets the compose `ollama` service. `http://host.docker.internal:11434`
+  # works when bridging to a host install; `https://ollama.com` works for the
+  # Cloud's chat endpoints but NOT embeddings on the reference account
+  # (see openspec/changes/bootstrap-thin-mvp/design.md D1).
+  base_url: http://ollama:11434
+  # Swapping the embedding model? Match `qdrant.vector_size` to the model's
+  # output dim or recreate the Qdrant collection — see docs/OPERATIONS.md.
+  embedding_model: nomic-embed-text
+  # api_key is NEVER hardcoded here. Set CORTEX__OLLAMA__API_KEY in .env
+  # or your secret store. The request adds `Authorization: Bearer <key>` when
+  # the key is non-empty; local Ollama servers ignore it.
+  api_key: null
+
+providers:
+  # New deployments use the compose-local Ollama instance for embeddings.
+  # The legacy `ollama` block remains the backwards-compatible source when
+  # this block is omitted.
+  embeddings:
+    provider: ollama
+    base_url: http://ollama:11434
+    model: nomic-embed-text
+    api_key: null
+  # Chat is independently configurable and defaults to Ollama Cloud. Supply
+  # the key through CORTEX__PROVIDERS__CHAT__API_KEY.
+  chat:
+    provider: ollama
+    base_url: https://ollama.com
+    model: gemma3:4b
+    api_key: null
+  extraction:
+    enabled: true
+    min_confidence: 0.6
+    timeout_seconds: 30
+    chat_qps: null
+
+retrieval:
+  default_top_k: 20
+  default_token_budget: 4000
+  # Approx tokens-per-char fallback when a real tokenizer is unavailable.
+  tokens_per_char: 0.25
+
+audit:
+  # Retention in days. 0 disables pruning.
+  retention_days: 90
+
+telemetry:
+  otlp_endpoint: http://otel-collector:4318
+  service_namespace: cortex
+
+ingestion:
+  git:
+    repos: []  # populated at runtime via the ingestion CLI or admin UI

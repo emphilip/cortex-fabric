@@ -9,13 +9,13 @@
 - [ ] 1.3 Add root `pyproject.toml` with `uv` workspace and per-service `pyproject.toml` files for Python services
 - [ ] 1.4 Add `Makefile` with `bootstrap`, `up`, `up-dev`, `down`, `test`, `lint`, `format`, `migrate`, `seed`, `smoke` targets
 - [ ] 1.5 Add `.editorconfig`, `.gitignore`, `.dockerignore`, root `.env.example`
-- [ ] 1.6 Add `hive-mind.yaml` default config with the schema from D7 and an example commented out
+- [ ] 1.6 Add `cortex.yaml` default config with the schema from D7 and an example commented out
 
 ## 2. Storage layer
 
 - [ ] 2.1 Postgres image based on `postgres:16` with Apache AGE compiled in (custom Dockerfile in `infra/postgres/`)
 - [ ] 2.2 Initial migration: catalog tables (`entity`, `entity_lineage`, `freshness`), graph vocabulary (`relationship_vocab`), audit (`audit_log` partitioned by week, immutability trigger), usage signals
-- [ ] 2.3 AGE schema bootstrap: create graph `hive_mind`, add label types per relationship vocabulary
+- [ ] 2.3 AGE schema bootstrap: create graph `cortex`, add label types per relationship vocabulary
 - [ ] 2.4 Qdrant compose service with persistent volume; bootstrap script that creates `<tenant>__<source>` collections with dense + sparse vector params
 - [ ] 2.5 Valkey compose service with persistent volume
 - [ ] 2.6 OPA compose service mounting `infra/opa/policies/` with a default `allow_internal_only` policy and a `health` rule
@@ -25,7 +25,7 @@
 - [ ] 3.1 `packages/shared` (TS) — types for `RetrievalRequest`, `RetrievalResponse`, `IdentityContext`, `AuditRecord`, `IngestEvent`
 - [ ] 3.2 `packages/shared-py` (Python) — Pydantic models mirroring the TS types, generated from a single JSON Schema where possible
 - [ ] 3.3 Shared OTel bootstrap module per language (resource attrs, exporter wiring, correlation-id propagation helpers)
-- [ ] 3.4 Shared config loader (YAML + env-override) per language with validation against `hive-mind.yaml` schema
+- [ ] 3.4 Shared config loader (YAML + env-override) per language with validation against `cortex.yaml` schema
 
 ## 4. MCP server (TypeScript)
 
@@ -59,7 +59,7 @@
 - [ ] 6.3 Anthropic adapter: intent classification (Haiku default), generation (Sonnet optional); `usage.input_tokens`/`output_tokens` surfaced
 - [ ] 6.4 OpenAI-compatible adapter: chat + embeddings; configurable `base_url`
 - [ ] 6.5 Provider registry: resolve `provider:model` strings from config; health probes per provider
-- [ ] 6.6 Cost table loader (`infra/costs.yaml`) and emission of `hive_mind_cost_usd_total`
+- [ ] 6.6 Cost table loader (`infra/costs.yaml`) and emission of `cortex_cost_usd_total`
 - [ ] 6.7 Provider unit tests with recorded responses (VCR-style)
 
 ## 7. Knowledge graph (Postgres + AGE)

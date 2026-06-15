@@ -3,7 +3,7 @@ import type {
   RetrievalResponse,
   TraverseRequest,
   TraverseResponse,
-} from "@hive-mind/shared";
+} from "@cortex/shared";
 import { request as undiciRequest } from "undici";
 
 export class PipelineRequestError extends Error {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { EntityListItem } from "@hive-mind/shared";
+import type { EntityListItem } from "@cortex/shared";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 

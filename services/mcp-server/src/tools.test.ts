@@ -42,15 +42,15 @@ class FakePipeline {
 }
 
 describe("tools/list", () => {
-  it("includes all five v0 tools, all under hive_mind/ namespace", () => {
+  it("includes all five v0 tools, all under cortex/ namespace", () => {
     const names = TOOL_DEFINITIONS.map((t) => t.name);
-    expect(names).toContain("hive_mind/retrieve_for_context");
-    expect(names).toContain("hive_mind/search");
-    expect(names).toContain("hive_mind/get_entity");
-    expect(names).toContain("hive_mind/traverse_graph");
-    expect(names).toContain("hive_mind/submit_feedback");
+    expect(names).toContain("cortex/retrieve_for_context");
+    expect(names).toContain("cortex/search");
+    expect(names).toContain("cortex/get_entity");
+    expect(names).toContain("cortex/traverse_graph");
+    expect(names).toContain("cortex/submit_feedback");
     for (const t of TOOL_DEFINITIONS) {
-      expect(t.name.startsWith("hive_mind/")).toBe(true);
+      expect(t.name.startsWith("cortex/")).toBe(true);
       expect(t.inputSchema).toBeTypeOf("object");
     }
   });
@@ -60,7 +60,7 @@ describe("retrieve_for_context", () => {
   it("propagates identity and generates a correlation id when none supplied", async () => {
     const pipeline = new FakePipeline() as unknown as PipelineClient;
     const result = await callTool(
-      "hive_mind/retrieve_for_context",
+      "cortex/retrieve_for_context",
       { query: "hello" },
       { config, pipeline },
     );
@@ -75,7 +75,7 @@ describe("retrieve_for_context", () => {
   it("preserves a caller-supplied correlation id", async () => {
     const pipeline = new FakePipeline() as unknown as PipelineClient;
     await callTool(
-      "hive_mind/retrieve_for_context",
+      "cortex/retrieve_for_context",
       { query: "hello" },
       { config, pipeline, correlationId: "cid-123" },
     );
@@ -85,16 +85,16 @@ describe("retrieve_for_context", () => {
   it("rejects empty queries", async () => {
     const pipeline = new FakePipeline() as unknown as PipelineClient;
     await expect(
-      callTool("hive_mind/retrieve_for_context", { query: " " }, { config, pipeline }),
+      callTool("cortex/retrieve_for_context", { query: " " }, { config, pipeline }),
     ).rejects.toThrow(/required/);
   });
 });
 
 describe("stub tools", () => {
   it.each([
-    "hive_mind/search",
-    "hive_mind/get_entity",
-    "hive_mind/submit_feedback",
+    "cortex/search",
+    "cortex/get_entity",
+    "cortex/submit_feedback",
   ])("%s throws NotImplementedInMvpError", async (name) => {
     const pipeline = new FakePipeline() as unknown as PipelineClient;
     await expect(callTool(name, {}, { config, pipeline })).rejects.toBeInstanceOf(
@@ -107,7 +107,7 @@ describe("traverse_graph", () => {
   it("forwards traversal arguments and returns the pipeline payload", async () => {
     const pipeline = new FakePipeline() as unknown as PipelineClient;
     const result = await callTool(
-      "hive_mind/traverse_graph",
+      "cortex/traverse_graph",
       {
         concept_id: "c1",
         types: ["depends_on"],
@@ -135,7 +135,7 @@ describe("traverse_graph", () => {
 
     await expect(
       callTool(
-        "hive_mind/traverse_graph",
+        "cortex/traverse_graph",
         { concept_id: "missing" },
         { config, pipeline },
       ),
@@ -145,7 +145,7 @@ describe("traverse_graph", () => {
   it("rejects a missing concept id", async () => {
     const pipeline = new FakePipeline() as unknown as PipelineClient;
     await expect(
-      callTool("hive_mind/traverse_graph", {}, { config, pipeline }),
+      callTool("cortex/traverse_graph", {}, { config, pipeline }),
     ).rejects.toThrow(/concept_id/);
   });
 });

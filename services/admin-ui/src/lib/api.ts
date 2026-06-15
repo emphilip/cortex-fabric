@@ -1,5 +1,5 @@
 // Pipeline-service client used by server components and a handful of client
-// actions. Shared types live in @hive-mind/shared.
+// actions. Shared types live in @cortex/shared.
 
 import type {
   ConnectorStatus,
@@ -13,10 +13,10 @@ import type {
   RelationshipType,
   TraverseResponse,
   VectorSearchResponse,
-} from "@hive-mind/shared";
+} from "@cortex/shared";
 
 const PIPELINE_URL =
-  process.env.HIVE_MIND__PIPELINE__URL || "http://pipeline:8000";
+  process.env.CORTEX__PIPELINE__URL || "http://pipeline:8000";
 
 const NO_STORE: RequestInit = { cache: "no-store" };
 

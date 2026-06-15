@@ -23,7 +23,7 @@ importers:
 
   services/admin-ui:
     dependencies:
-      '@hive-mind/shared':
+      '@cortex/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@radix-ui/react-dialog':
@@ -141,7 +141,7 @@ importers:
 
   services/mcp-server:
     dependencies:
-      '@hive-mind/shared':
+      '@cortex/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@modelcontextprotocol/sdk':

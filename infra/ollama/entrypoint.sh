@@ -16,7 +16,7 @@ MODEL="${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}"
 # Strip an explicit :tag if present to compare against `ollama list` output.
 MODEL_PREFIX="${MODEL%%:*}"
 
-echo "[hive-mind/ollama] starting ollama serve..."
+echo "[cortex/ollama] starting ollama serve..."
 /bin/ollama serve &
 SERVER_PID=$!
 
@@ -25,18 +25,18 @@ i=0
 until /bin/ollama list >/dev/null 2>&1; do
   i=$((i + 1))
   if [ "$i" -gt 60 ]; then
-    echo "[hive-mind/ollama] server did not become reachable after 60s"
+    echo "[cortex/ollama] server did not become reachable after 60s"
     exit 1
   fi
   sleep 1
 done
 
 if /bin/ollama list | awk 'NR>1 {print $1}' | grep -q "^${MODEL_PREFIX}"; then
-  echo "[hive-mind/ollama] model already present: ${MODEL}"
+  echo "[cortex/ollama] model already present: ${MODEL}"
 else
-  echo "[hive-mind/ollama] pulling model: ${MODEL}"
+  echo "[cortex/ollama] pulling model: ${MODEL}"
   /bin/ollama pull "${MODEL}"
 fi
 
-echo "[hive-mind/ollama] ready"
+echo "[cortex/ollama] ready"
 wait "${SERVER_PID}"

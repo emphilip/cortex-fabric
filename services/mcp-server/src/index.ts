@@ -45,7 +45,7 @@ async function main() {
 
   // ----- MCP server over stdio ---------------------------------------------
   const server = new Server(
-    { name: "hive-mind", version: "0.0.0" },
+    { name: "cortex", version: "0.0.0" },
     { capabilities: { tools: {} } },
   );
 

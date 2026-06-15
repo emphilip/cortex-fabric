@@ -5,17 +5,17 @@ TBD - created by archiving change adopt-graphifyy. Update Purpose after archive.
 ## Requirements
 ### Requirement: Named relationship vocabulary
 
-The graph schema SHALL represent concept-to-concept relationships as **named edges** drawn from a curated, extensible vocabulary stored in `hive_mind.relationship_vocab`. Vocabulary rows SHALL include `name` (primary key), `description`, `inverse` (optional name of the inverse relation), `directed` (boolean, default true), and `deprecated_at` (nullable timestamp). The vocabulary MUST be seeded at DB init with at least: `depends_on`, `defined_in`, `supersedes`, `mentions`, `related_to`, `causes`, `derived_from`.
+The graph schema SHALL represent concept-to-concept relationships as **named edges** drawn from a curated, extensible vocabulary stored in `cortex.relationship_vocab`. Vocabulary rows SHALL include `name` (primary key), `description`, `inverse` (optional name of the inverse relation), `directed` (boolean, default true), and `deprecated_at` (nullable timestamp). The vocabulary MUST be seeded at DB init with at least: `depends_on`, `defined_in`, `supersedes`, `mentions`, `related_to`, `causes`, `derived_from`.
 
 The deterministic code extractor also requires the seeded names `calls`, `imports`, and `uses`, for a total of ten default vocabulary entries.
 
-Edges in `hive_mind.relationship_edge` SHALL carry a `type TEXT` column with a FK to `relationship_vocab.name`. Inserts with an unknown name MUST fail at the database level.
+Edges in `cortex.relationship_edge` SHALL carry a `type TEXT` column with a FK to `relationship_vocab.name`. Inserts with an unknown name MUST fail at the database level.
 
 The vocabulary table MUST be editable through an admin API: add a row, edit `description` / `inverse` / `directed`, mark a row deprecated. Marking a row deprecated MUST NOT delete it nor cascade to existing edges.
 
 #### Scenario: Vocabulary FK rejects unknown names
 
-- **WHEN** any caller attempts to insert into `hive_mind.relationship_edge` with `type = "nonsense"`
+- **WHEN** any caller attempts to insert into `cortex.relationship_edge` with `type = "nonsense"`
 - **THEN** the insert fails with a foreign key violation
 
 #### Scenario: Vocabulary seeded at init
@@ -36,7 +36,7 @@ The vocabulary table MUST be editable through an admin API: add a row, edit `des
 
 ### Requirement: Deterministic code-graph extraction during ingestion
 
-For every code file (where `is_code_path(path)` is true), the ingestion service SHALL invoke `graphify.extract([path])` exactly once per file, then persist the resulting `{nodes, edges}` to `hive_mind.concept`, `hive_mind.relationship_edge`, and `hive_mind.relationship_evidence` via the `graph_writer` module. The persistence MUST run inside a single Postgres transaction so a partial failure leaves no orphan rows.
+For every code file (where `is_code_path(path)` is true), the ingestion service SHALL invoke `graphify.extract([path])` exactly once per file, then persist the resulting `{nodes, edges}` to `cortex.concept`, `cortex.relationship_edge`, and `cortex.relationship_evidence` via the `graph_writer` module. The persistence MUST run inside a single Postgres transaction so a partial failure leaves no orphan rows.
 
 Code extraction MUST NOT call any chat model. Code extraction MUST be best-effort: a graphifyy failure on one file MUST NOT abort the surrounding ingest — the file's catalog row and (text-fallback) chunks still upsert.
 
@@ -45,7 +45,7 @@ Code extraction MUST NOT call any chat model. Code extraction MUST be best-effor
 - **WHEN** ingestion processes a Python file containing two classes and a top-level function
 - **THEN** `graphify.extract` is called exactly once for that file
 - **AND** no chat-model call is made for any chunk derived from that file
-- **AND** the resulting concepts and edges land in `hive_mind.concept` / `hive_mind.relationship_edge` in a single transaction
+- **AND** the resulting concepts and edges land in `cortex.concept` / `cortex.relationship_edge` in a single transaction
 
 #### Scenario: Code file with zero symbols does not produce graph rows
 
@@ -120,7 +120,7 @@ When graphifyy emits an edge whose target is a string that isn't itself an AST n
 #### Scenario: imports os creates the os concept
 
 - **WHEN** the writer processes an edge `(module, "imports", "os")` and no node with id `"os"` exists in the extraction
-- **THEN** a new `hive_mind.concept` row is created with `name = "os"` and `state = "confirmed"`
+- **THEN** a new `cortex.concept` row is created with `name = "os"` and `state = "confirmed"`
 - **AND** the edge's `to_concept_id` references the new concept
 
 ### Requirement: Symbol identity flows through the catalog
@@ -160,9 +160,9 @@ The `graph_writer.write_code_graph` function SHALL wrap all node and edge insert
 
 ### Requirement: Automatic relationship extraction
 
-Ingestion SHALL run a *concept-and-relationship extractor* on every chunk after the chunk's vector point is upserted to Qdrant. The extractor MUST call a chat model (default: Ollama Cloud `gemma3:4b`) and request a structured JSON output containing `concepts` and `relations`. Concepts MUST be deduped against `hive_mind.concept` by a normalised `dedupe_key` (Unicode-folded, case-folded, whitespace-collapsed). New concepts AND new edges land in `state = "candidate"`.
+Ingestion SHALL run a *concept-and-relationship extractor* on every chunk after the chunk's vector point is upserted to Qdrant. The extractor MUST call a chat model (default: Ollama Cloud `gemma3:4b`) and request a structured JSON output containing `concepts` and `relations`. Concepts MUST be deduped against `cortex.concept` by a normalised `dedupe_key` (Unicode-folded, case-folded, whitespace-collapsed). New concepts AND new edges land in `state = "candidate"`.
 
-The extractor MUST be best-effort: a failure (timeout, parse error, model unavailable) on one chunk MUST NOT fail the ingest. Failures MUST increment `hive_mind_extractor_errors_total{reason}` and log a structured warning naming the chunk's `entity_id`.
+The extractor MUST be best-effort: a failure (timeout, parse error, model unavailable) on one chunk MUST NOT fail the ingest. Failures MUST increment `cortex_extractor_errors_total{reason}` and log a structured warning naming the chunk's `entity_id`.
 
 Every extracted edge MUST carry a `confidence FLOAT`, an `evidence_uri TEXT` pointing at the source chunk's `entity_id`, and an `extractor_version TEXT`. Edges below a configurable `min_confidence` (default 0.6) MUST NOT be inserted at all.
 
@@ -182,7 +182,7 @@ Every extracted edge MUST carry a `confidence FLOAT`, an `evidence_uri TEXT` poi
 
 - **WHEN** the chat model is unreachable during a chunk's extraction pass
 - **THEN** the chunk's catalog row and Qdrant point are still upserted
-- **AND** `hive_mind_extractor_errors_total{reason}` increments
+- **AND** `cortex_extractor_errors_total{reason}` increments
 - **AND** no concept or edge rows are written for that chunk
 
 #### Scenario: Edges below the confidence threshold are dropped
@@ -192,7 +192,7 @@ Every extracted edge MUST carry a `confidence FLOAT`, an `evidence_uri TEXT` poi
 
 ### Requirement: Review, promote, edit, and delete
 
-The admin API SHALL expose endpoints to list, promote, edit, and delete both candidate concepts and candidate edges. Every state transition MUST write a row to `hive_mind.graph_audit_log` (separate from the retrieval audit log) capturing `actor`, `target_id`, `target_kind ∈ {concept, edge, vocab}`, `from_state`, `to_state`, `reason`, `at`, and a JSONB `before` / `after` snapshot.
+The admin API SHALL expose endpoints to list, promote, edit, and delete both candidate concepts and candidate edges. Every state transition MUST write a row to `cortex.graph_audit_log` (separate from the retrieval audit log) capturing `actor`, `target_id`, `target_kind ∈ {concept, edge, vocab}`, `from_state`, `to_state`, `reason`, `at`, and a JSONB `before` / `after` snapshot.
 
 Promotion changes `state` from `candidate` to `confirmed`. Demotion (`confirmed → candidate`) MUST also be supported. Soft-delete (`* → tombstoned`) MUST be supported. `tombstoned` rows MUST NOT appear in traversal or browse responses by default.
 
@@ -218,7 +218,7 @@ Promotion changes `state` from `candidate` to `confirmed`. Demotion (`confirmed 
 
 The system SHALL expose `GET /graph/traverse?concept_id=…&types=…&depth=…&limit=…&include_candidates=…` returning the reachable subgraph as `{nodes: [...], edges: [...]}`. `depth` defaults to `2` and is capped at `4`. `limit` defaults to `50` and is capped at `200`. `types` accepts a comma-separated list of vocabulary names; absence means "all types". `include_candidates` defaults to `false`; when `true`, candidate edges and their endpoints are included.
 
-The endpoint MUST execute the traversal via Apache AGE (openCypher) against the `hive_mind` graph, then hydrate node rows from `hive_mind.concept` so `name`, `description`, and `state` are present.
+The endpoint MUST execute the traversal via Apache AGE (openCypher) against the `cortex` graph, then hydrate node rows from `cortex.concept` so `name`, `description`, and `state` are present.
 
 #### Scenario: Bounded depth traversal
 
@@ -248,7 +248,7 @@ Deferred. The system SHALL NOT compute or expose concept clusters in this change
 
 ### Requirement: Concept identity and lifecycle
 
-The system SHALL maintain a `hive_mind.concept` table with `concept_id UUID PRIMARY KEY`, `tenant TEXT NOT NULL`, `name TEXT NOT NULL`, `dedupe_key TEXT NOT NULL`, `description TEXT`, `aliases TEXT[] NOT NULL DEFAULT '{}'`, `state TEXT NOT NULL DEFAULT 'candidate'`, `confidence FLOAT`, `extractor_version TEXT`, `created_at TIMESTAMPTZ`, `updated_at TIMESTAMPTZ`, `tombstoned_at TIMESTAMPTZ`. A UNIQUE constraint on `(tenant, dedupe_key)` enforces dedupe.
+The system SHALL maintain a `cortex.concept` table with `concept_id UUID PRIMARY KEY`, `tenant TEXT NOT NULL`, `name TEXT NOT NULL`, `dedupe_key TEXT NOT NULL`, `description TEXT`, `aliases TEXT[] NOT NULL DEFAULT '{}'`, `state TEXT NOT NULL DEFAULT 'candidate'`, `confidence FLOAT`, `extractor_version TEXT`, `created_at TIMESTAMPTZ`, `updated_at TIMESTAMPTZ`, `tombstoned_at TIMESTAMPTZ`. A UNIQUE constraint on `(tenant, dedupe_key)` enforces dedupe.
 
 The `dedupe_key` MUST be computed as `lower(unaccent(regexp_replace(trim(name), '\s+', ' ', 'g')))` so visually-equivalent surface forms collide.
 
@@ -266,7 +266,7 @@ The `dedupe_key` MUST be computed as `lower(unaccent(regexp_replace(trim(name), 
 
 ### Requirement: Evidence linkage
 
-Every candidate edge SHALL have at least one row in `hive_mind.relationship_evidence` linking it to the source chunk's `entity_id` (`hive_mind.entity`), with a `span TEXT` (optional, the supporting text fragment), `extractor_version`, and `confidence`. Promotion to `confirmed` MUST preserve all evidence rows.
+Every candidate edge SHALL have at least one row in `cortex.relationship_evidence` linking it to the source chunk's `entity_id` (`cortex.entity`), with a `span TEXT` (optional, the supporting text fragment), `extractor_version`, and `confidence`. Promotion to `confirmed` MUST preserve all evidence rows.
 
 #### Scenario: Evidence row written alongside candidate edge
 
@@ -281,7 +281,7 @@ Every candidate edge SHALL have at least one row in `hive_mind.relationship_evid
 
 ### Requirement: Graph audit log immutability
 
-The `hive_mind.graph_audit_log` table SHALL be append-only with the same immutability semantics as `hive_mind.audit_log`: a trigger MUST forbid `DELETE` and forbid `UPDATE` on every column. Partitioning by week MAY be deferred to the operations follow-up change.
+The `cortex.graph_audit_log` table SHALL be append-only with the same immutability semantics as `cortex.audit_log`: a trigger MUST forbid `DELETE` and forbid `UPDATE` on every column. Partitioning by week MAY be deferred to the operations follow-up change.
 
 #### Scenario: Cannot update a graph audit row
 

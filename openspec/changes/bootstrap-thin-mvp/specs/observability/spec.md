@@ -14,14 +14,14 @@ In v0 the spans MUST be emitted, but the OTel collector + Tempo backend MAY be a
 
 ### Requirement: Prometheus metrics
 
-Each service SHALL expose `/metrics` in Prometheus format. The standard set MUST include `hive_mind_requests_total{tool,outcome}`, `hive_mind_stage_latency_seconds_bucket{stage}`, `hive_mind_tokens_total{stage,model,provider,tenant,direction}`, and `hive_mind_provider_errors_total{provider,error_code}`.
+Each service SHALL expose `/metrics` in Prometheus format. The standard set MUST include `cortex_requests_total{tool,outcome}`, `cortex_stage_latency_seconds_bucket{stage}`, `cortex_tokens_total{stage,model,provider,tenant,direction}`, and `cortex_provider_errors_total{provider,error_code}`.
 
 In v0 only the pipeline service MUST expose the counters above. Ingestion counters are deferred to the follow-up change that adds the connector framework with metrics hooks. No Prometheus scraper is bundled in v0.
 
 #### Scenario: Pipeline metrics endpoint returns required series
 
 - **WHEN** any HTTP client scrapes `GET /metrics` on the pipeline service after a single successful retrieve
-- **THEN** the response contains `hive_mind_requests_total`, `hive_mind_tokens_total`, and the stage-latency histogram
+- **THEN** the response contains `cortex_requests_total`, `cortex_tokens_total`, and the stage-latency histogram
 
 ### Requirement: Per-stage token accounting
 
@@ -37,12 +37,12 @@ In v0 only the hybrid retrieval stage invokes a model. Its span and counter MUST
 
 ### Requirement: Cost estimation
 
-The system SHALL NOT emit a cost metric in v0. A follow-up change MUST introduce the cost-per-1k-tokens table and the `hive_mind_cost_usd_total` counter together.
+The system SHALL NOT emit a cost metric in v0. A follow-up change MUST introduce the cost-per-1k-tokens table and the `cortex_cost_usd_total` counter together.
 
 #### Scenario: Cost metric is absent in v0
 
 - **WHEN** Prometheus scrapes the pipeline `/metrics` in the thin MVP
-- **THEN** the `hive_mind_cost_usd_total` metric series is not present
+- **THEN** the `cortex_cost_usd_total` metric series is not present
 
 ### Requirement: Grafana dashboards shipped
 

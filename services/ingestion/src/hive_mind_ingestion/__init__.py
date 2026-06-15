@@ -1,1 +1,0 @@
-"""Hive Mind ingestion."""

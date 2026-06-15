@@ -5,9 +5,9 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
 COPY tsconfig.base.json ./
 COPY packages/shared ./packages/shared
 COPY services/admin-ui ./services/admin-ui
-RUN pnpm install --filter @hive-mind/admin-ui... --frozen-lockfile || pnpm install --filter @hive-mind/admin-ui...
-RUN pnpm --filter @hive-mind/shared build
-RUN pnpm --filter @hive-mind/admin-ui build
+RUN pnpm install --filter @cortex/admin-ui... --frozen-lockfile || pnpm install --filter @cortex/admin-ui...
+RUN pnpm --filter @cortex/shared build
+RUN pnpm --filter @cortex/admin-ui build
 
 FROM node:22-alpine
 WORKDIR /app

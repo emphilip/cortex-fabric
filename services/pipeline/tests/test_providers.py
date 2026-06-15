@@ -4,7 +4,7 @@ import pytest
 import respx
 from httpx import Response
 
-from hive_mind_pipeline.providers import OllamaEmbeddings
+from cortex_pipeline.providers import OllamaEmbeddings
 
 
 @pytest.mark.asyncio

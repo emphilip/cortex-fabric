@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from hive_mind_ingestion.connectors.git import (
+from cortex_ingestion.connectors.git import (
     GitDocument,
     _stable_id,
     walk_repo,

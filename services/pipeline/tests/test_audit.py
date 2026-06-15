@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from hive_mind_pipeline.storage.audit import AuditStore
+from cortex_pipeline.storage.audit import AuditStore
 
 
 class _Acquire:

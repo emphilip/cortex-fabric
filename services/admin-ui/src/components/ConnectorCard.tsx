@@ -1,4 +1,4 @@
-import type { ConnectorStatus } from "@hive-mind/shared";
+import type { ConnectorStatus } from "@cortex/shared";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";

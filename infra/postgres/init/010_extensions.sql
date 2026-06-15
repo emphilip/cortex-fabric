@@ -9,4 +9,4 @@ SET search_path = ag_catalog, "$user", public;
 
 -- Knowledge graph (named-relationship vocabulary lives in a normal table; the
 -- AGE graph itself is bootstrapped here but unused by the thin MVP).
-SELECT create_graph('hive_mind');
+SELECT create_graph('cortex');

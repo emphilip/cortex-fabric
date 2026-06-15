@@ -4,12 +4,12 @@ import asyncio
 from dataclasses import dataclass
 
 import pytest
-from hive_mind_shared import HiveMindConfig
-from hive_mind_pipeline.providers import EmbeddingResult
+from cortex_shared import CortexConfig
+from cortex_pipeline.providers import EmbeddingResult
 
-from hive_mind_ingestion import pipeline_runner
-from hive_mind_ingestion.chunking import Chunk
-from hive_mind_ingestion.connectors.git import GitDocument
+from cortex_ingestion import pipeline_runner
+from cortex_ingestion.chunking import Chunk
+from cortex_ingestion.connectors.git import GitDocument
 
 
 class _Catalog:
@@ -129,10 +129,109 @@ async def test_extractor_timeout_does_not_abort_chunk_loop(monkeypatch):
     )
     parents, chunks = await pipeline_runner.ingest_documents(
         [doc],
-        cfg=HiveMindConfig(),
+        cfg=CortexConfig(),
     )
 
     assert (parents, chunks) == (1, 2)
     assert len(calls) == 2
     assert len(_Catalog.inserted) == 3  # parent + both chunks
     assert len(_Vector.upserts) == 2
+
+
+@pytest.mark.asyncio
+async def test_document_limit_stops_before_second_parent(monkeypatch):
+    async def vocab(*args, **kwargs):
+        return []
+
+    monkeypatch.setattr(pipeline_runner, "CatalogStore", _Catalog)
+    monkeypatch.setattr(pipeline_runner, "VectorIndex", _Vector)
+    monkeypatch.setattr(pipeline_runner, "OllamaEmbeddings", _Embeddings)
+    monkeypatch.setattr(pipeline_runner, "setup_otel", lambda *args: _Tracer())
+    monkeypatch.setattr(pipeline_runner, "load_vocabulary", vocab)
+    monkeypatch.setattr(pipeline_runner, "is_code_path", lambda path: False)
+    monkeypatch.setattr(
+        pipeline_runner,
+        "chunk_text",
+        lambda text: [Chunk(index=0, text=text)],
+    )
+    cfg = CortexConfig()
+    cfg.providers.extraction.enabled = False
+    docs = [
+        GitDocument(
+            entity_id=f"parent-{index}",
+            title=f"{index}.md",
+            body=f"document {index}",
+            source="git",
+            source_uri=f"git://repo/{index}.md",
+            source_revision="abc",
+            content_hash=f"hash-{index}",
+            metadata={"path": f"{index}.md"},
+        )
+        for index in range(2)
+    ]
+
+    summary = await pipeline_runner.ingest_documents(
+        docs,
+        cfg=cfg,
+        max_documents=1,
+    )
+
+    assert summary.parents == 1
+    assert summary.chunks == 1
+    assert summary.documents_truncated is True
+    assert len(_Catalog.inserted) == 2
+
+
+@pytest.mark.asyncio
+async def test_chunk_limit_stops_downstream_work(monkeypatch):
+    extract_calls: list[str] = []
+
+    async def vocab(*args, **kwargs):
+        return ["related_to"]
+
+    async def extract(**kwargs):
+        extract_calls.append(kwargs["chunk_entity_id"])
+        from cortex_shared import ExtractionResult
+
+        return ExtractionResult(concepts=[], relations=[]), None
+
+    monkeypatch.setattr(pipeline_runner, "CatalogStore", _Catalog)
+    monkeypatch.setattr(pipeline_runner, "VectorIndex", _Vector)
+    monkeypatch.setattr(pipeline_runner, "OllamaEmbeddings", _Embeddings)
+    monkeypatch.setattr(pipeline_runner, "OllamaChat", _Chat)
+    monkeypatch.setattr(pipeline_runner, "setup_otel", lambda *args: _Tracer())
+    monkeypatch.setattr(pipeline_runner, "load_vocabulary", vocab)
+    monkeypatch.setattr(pipeline_runner, "extract_for_chunk", extract)
+    monkeypatch.setattr(pipeline_runner, "is_code_path", lambda path: False)
+    monkeypatch.setattr(
+        pipeline_runner,
+        "chunk_text",
+        lambda text: [
+            Chunk(index=0, text="one"),
+            Chunk(index=1, text="two"),
+            Chunk(index=2, text="three"),
+        ],
+    )
+    doc = GitDocument(
+        entity_id="parent",
+        title="README.md",
+        body="one two three",
+        source="git",
+        source_uri="git://repo/README.md",
+        source_revision="abc",
+        content_hash="hash",
+        metadata={"path": "README.md"},
+    )
+
+    summary = await pipeline_runner.ingest_documents(
+        [doc],
+        cfg=CortexConfig(),
+        max_chunks=2,
+    )
+
+    assert summary.parents == 1
+    assert summary.chunks == 2
+    assert summary.chunks_truncated is True
+    assert len(_Catalog.inserted) == 3
+    assert len(_Vector.upserts) == 2
+    assert len(extract_calls) == 2

@@ -20,9 +20,9 @@ COPY services/pipeline /app/services/pipeline
 
 RUN uv sync --no-dev --all-packages
 
-ENV HIVE_MIND_CONFIG=/app/hive-mind.yaml
-COPY hive-mind.yaml /app/hive-mind.yaml
+ENV CORTEX_CONFIG=/app/cortex.yaml
+COPY cortex.yaml /app/cortex.yaml
 
 EXPOSE 8000
-CMD ["uv", "run", "--package", "hive-mind-pipeline", "uvicorn", \
-     "hive_mind_pipeline.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "--package", "cortex-pipeline", "uvicorn", \
+     "cortex_pipeline.app:app", "--host", "0.0.0.0", "--port", "8000"]

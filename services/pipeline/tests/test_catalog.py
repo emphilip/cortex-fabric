@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from hive_mind_pipeline.storage.catalog import CatalogStore
+from cortex_pipeline.storage.catalog import CatalogStore
 
 
 class _Acquire:

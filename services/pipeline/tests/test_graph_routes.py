@@ -4,9 +4,9 @@ from datetime import datetime
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from hive_mind_shared import HiveMindConfig
+from cortex_shared import CortexConfig
 
-from hive_mind_pipeline.graph import routes
+from cortex_pipeline.graph import routes
 
 
 def _concept(concept_id: str = "c1", state: str = "confirmed") -> dict:
@@ -141,7 +141,7 @@ class FakeGraph:
 def _client(graph: FakeGraph | None = None) -> tuple[TestClient, FakeGraph]:
     app = FastAPI()
     app.include_router(routes.router)
-    app.state.cfg = HiveMindConfig()
+    app.state.cfg = CortexConfig()
     fake = graph or FakeGraph()
     app.state.graph = fake
     return TestClient(app), fake

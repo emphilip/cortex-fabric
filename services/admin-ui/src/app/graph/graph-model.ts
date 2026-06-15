@@ -1,4 +1,4 @@
-import type { ConceptListItem, RelationshipEdge } from "@hive-mind/shared";
+import type { ConceptListItem, RelationshipEdge } from "@cortex/shared";
 
 export interface GraphNode {
   id: string;

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from hive_mind_ingestion.chunking import (
+from cortex_ingestion.chunking import (
     chunk_code_by_symbols,
     chunk_text,
     is_code_path,

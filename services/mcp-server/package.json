@@ -1,11 +1,11 @@
 {
-  "name": "@hive-mind/mcp-server",
+  "name": "@cortex/mcp-server",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
-    "hive-mind-mcp": "./dist/index.js"
+    "cortex-mcp": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -16,7 +16,7 @@
     "format": "echo 'no formatter'"
   },
   "dependencies": {
-    "@hive-mind/shared": "workspace:*",
+    "@cortex/shared": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "undici": "^7.0.0"
   },

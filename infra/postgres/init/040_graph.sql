@@ -17,7 +17,7 @@ SET search_path = ag_catalog, "$user", public;
 -- Vocabulary
 -- ---------------------------------------------------------------------------
 
-CREATE TABLE hive_mind.relationship_vocab (
+CREATE TABLE cortex.relationship_vocab (
   name          TEXT PRIMARY KEY,
   description   TEXT NOT NULL,
   inverse       TEXT,
@@ -29,7 +29,7 @@ CREATE TABLE hive_mind.relationship_vocab (
 -- Seven domain-of-discourse relations the LLM extractor produces plus three
 -- code-structure relations graphifyy produces. Marker: edges whose source row
 -- references a name not present here will fail at insert (FK).
-INSERT INTO hive_mind.relationship_vocab (name, description, inverse, directed) VALUES
+INSERT INTO cortex.relationship_vocab (name, description, inverse, directed) VALUES
   ('depends_on',  'A requires B to function (semantic dependency, not necessarily a code call)', 'depended_on_by', TRUE),
   ('defined_in',  'A is declared inside B (concept membership; e.g., a function defined in a file)', 'defines', TRUE),
   ('supersedes',  'A replaces B (A is the newer version of the same concept)', 'superseded_by', TRUE),
@@ -46,7 +46,7 @@ INSERT INTO hive_mind.relationship_vocab (name, description, inverse, directed) 
 -- Concepts (nodes)
 -- ---------------------------------------------------------------------------
 
-CREATE TABLE hive_mind.concept (
+CREATE TABLE cortex.concept (
   concept_id        UUID PRIMARY KEY,
   tenant            TEXT NOT NULL,
   name              TEXT NOT NULL,
@@ -69,20 +69,20 @@ CREATE TABLE hive_mind.concept (
   tombstoned_at     TIMESTAMPTZ
 );
 
-CREATE UNIQUE INDEX concept_dedupe_uq ON hive_mind.concept (tenant, dedupe_key);
-CREATE INDEX concept_state_ix         ON hive_mind.concept (tenant, state);
-CREATE INDEX concept_symbol_ix        ON hive_mind.concept (tenant, symbol_id) WHERE symbol_id IS NOT NULL;
+CREATE UNIQUE INDEX concept_dedupe_uq ON cortex.concept (tenant, dedupe_key);
+CREATE INDEX concept_state_ix         ON cortex.concept (tenant, state);
+CREATE INDEX concept_symbol_ix        ON cortex.concept (tenant, symbol_id) WHERE symbol_id IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
 -- Edges (typed relationships between concepts)
 -- ---------------------------------------------------------------------------
 
-CREATE TABLE hive_mind.relationship_edge (
+CREATE TABLE cortex.relationship_edge (
   edge_id            UUID PRIMARY KEY,
   tenant             TEXT NOT NULL,
-  type               TEXT NOT NULL REFERENCES hive_mind.relationship_vocab(name),
-  from_concept_id    UUID NOT NULL REFERENCES hive_mind.concept(concept_id),
-  to_concept_id      UUID NOT NULL REFERENCES hive_mind.concept(concept_id),
+  type               TEXT NOT NULL REFERENCES cortex.relationship_vocab(name),
+  from_concept_id    UUID NOT NULL REFERENCES cortex.concept(concept_id),
+  to_concept_id      UUID NOT NULL REFERENCES cortex.concept(concept_id),
   state              TEXT NOT NULL DEFAULT 'candidate' CHECK (state IN ('candidate','confirmed','tombstoned')),
   confidence         FLOAT NOT NULL DEFAULT 0.0,
   extractor_version  TEXT,
@@ -92,35 +92,35 @@ CREATE TABLE hive_mind.relationship_edge (
 );
 
 CREATE UNIQUE INDEX relationship_edge_triple_uq
-  ON hive_mind.relationship_edge (tenant, from_concept_id, type, to_concept_id);
+  ON cortex.relationship_edge (tenant, from_concept_id, type, to_concept_id);
 CREATE INDEX relationship_edge_state_confidence_ix
-  ON hive_mind.relationship_edge (state, confidence DESC);
-CREATE INDEX relationship_edge_from_ix ON hive_mind.relationship_edge (from_concept_id);
-CREATE INDEX relationship_edge_to_ix   ON hive_mind.relationship_edge (to_concept_id);
+  ON cortex.relationship_edge (state, confidence DESC);
+CREATE INDEX relationship_edge_from_ix ON cortex.relationship_edge (from_concept_id);
+CREATE INDEX relationship_edge_to_ix   ON cortex.relationship_edge (to_concept_id);
 
 -- ---------------------------------------------------------------------------
 -- Evidence: which catalog chunk did each edge come from?
 -- ---------------------------------------------------------------------------
 
-CREATE TABLE hive_mind.relationship_evidence (
+CREATE TABLE cortex.relationship_evidence (
   evidence_id       BIGSERIAL PRIMARY KEY,
-  edge_id           UUID NOT NULL REFERENCES hive_mind.relationship_edge(edge_id) ON DELETE CASCADE,
-  entity_id         UUID NOT NULL REFERENCES hive_mind.entity(entity_id),
+  edge_id           UUID NOT NULL REFERENCES cortex.relationship_edge(edge_id) ON DELETE CASCADE,
+  entity_id         UUID NOT NULL REFERENCES cortex.entity(entity_id),
   span              TEXT,
   extractor_version TEXT,
   confidence        FLOAT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX relationship_evidence_edge_ix   ON hive_mind.relationship_evidence (edge_id);
-CREATE INDEX relationship_evidence_entity_ix ON hive_mind.relationship_evidence (entity_id);
+CREATE INDEX relationship_evidence_edge_ix   ON cortex.relationship_evidence (edge_id);
+CREATE INDEX relationship_evidence_entity_ix ON cortex.relationship_evidence (entity_id);
 
 -- ---------------------------------------------------------------------------
--- Grants (the `hive` role exists already from 090_grants.sql' s ALTER DEFAULT)
+-- Grants (the `cortex` role exists already from 090_grants.sql' s ALTER DEFAULT)
 -- ---------------------------------------------------------------------------
 
-GRANT SELECT, INSERT, UPDATE ON hive_mind.relationship_vocab    TO hive;
-GRANT SELECT, INSERT, UPDATE ON hive_mind.concept               TO hive;
-GRANT SELECT, INSERT, UPDATE ON hive_mind.relationship_edge     TO hive;
-GRANT SELECT, INSERT, UPDATE ON hive_mind.relationship_evidence TO hive;
-GRANT USAGE, SELECT ON hive_mind.relationship_evidence_evidence_id_seq TO hive;
+GRANT SELECT, INSERT, UPDATE ON cortex.relationship_vocab    TO cortex;
+GRANT SELECT, INSERT, UPDATE ON cortex.concept               TO cortex;
+GRANT SELECT, INSERT, UPDATE ON cortex.relationship_edge     TO cortex;
+GRANT SELECT, INSERT, UPDATE ON cortex.relationship_evidence TO cortex;
+GRANT USAGE, SELECT ON cortex.relationship_evidence_evidence_id_seq TO cortex;

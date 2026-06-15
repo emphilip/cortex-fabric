@@ -9,12 +9,12 @@ from __future__ import annotations
 
 import pytest
 
-from hive_mind_ingestion.graph_writer import (
+from cortex_ingestion.graph_writer import (
     _CONFIDENCE_MAP,
     _RELATION_MAP,
     write_code_graph,
 )
-from hive_mind_pipeline.storage.catalog import CatalogStore
+from cortex_pipeline.storage.catalog import CatalogStore
 
 
 # --- fakes -----------------------------------------------------------------
@@ -101,7 +101,7 @@ async def test_single_node_writes_one_concept():
     assert edges == 0
     # First insert is the concept; transaction is bracketed.
     assert conn.tx_started and conn.tx_finished
-    assert any("INSERT INTO hive_mind.concept" in s for s, _ in conn.statements)
+    assert any("INSERT INTO cortex.concept" in s for s, _ in conn.statements)
 
 
 @pytest.mark.asyncio
@@ -134,7 +134,7 @@ async def test_extracted_edge_lands_confirmed():
     edge_inserts = [
         (sql, args)
         for sql, args in conn.statements
-        if "INSERT INTO hive_mind.relationship_edge" in sql
+        if "INSERT INTO cortex.relationship_edge" in sql
     ]
     assert len(edge_inserts) == 1
     args = edge_inserts[0][1]
@@ -172,7 +172,7 @@ async def test_ambiguous_edge_lands_candidate():
     )
     assert edges == 1
     edge_inserts = [
-        a for s, a in conn.statements if "INSERT INTO hive_mind.relationship_edge" in s
+        a for s, a in conn.statements if "INSERT INTO cortex.relationship_edge" in s
     ]
     state = edge_inserts[0][5]
     confidence = edge_inserts[0][6]
@@ -201,7 +201,7 @@ async def test_inferred_edge_confirmed_at_lower_confidence():
     )
     assert edges == 1
     edge_args = next(
-        a for s, a in conn.statements if "INSERT INTO hive_mind.relationship_edge" in s
+        a for s, a in conn.statements if "INSERT INTO cortex.relationship_edge" in s
     )
     assert edge_args[5] == "confirmed"
     assert edge_args[6] == 0.85
@@ -233,7 +233,7 @@ async def test_relations_map_to_vocabulary():
         graphify_result=result,
     )
     edge_args = [
-        a for s, a in conn.statements if "INSERT INTO hive_mind.relationship_edge" in s
+        a for s, a in conn.statements if "INSERT INTO cortex.relationship_edge" in s
     ]
     types = [args[2] for args in edge_args]
     # Each mapping verified per the _RELATION_MAP table.

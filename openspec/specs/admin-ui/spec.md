@@ -107,7 +107,7 @@ Storybook coverage is mandatory for every new component (`ConceptRow`, `ConceptD
 
 #### Scenario: Storybook covers the new components
 
-- **WHEN** `pnpm --filter @hive-mind/admin-ui build-storybook` is run after this change ships
+- **WHEN** `pnpm --filter @cortex/admin-ui build-storybook` is run after this change ships
 - **THEN** at least one story exists for each of `ConceptRow`, `ConceptDetail`, `CandidateEdgeRow`, `RelationshipTypeBadge`, `VocabRow`
 - **AND** Storybook builds without warnings
 
@@ -119,7 +119,7 @@ Every new shared component introduced by this capability (`EntityRow`, `EntityDe
 
 - **WHEN** the components above are added under `services/admin-ui/src/components/`
 - **THEN** each component has a `<Name>.stories.tsx` neighbour file in the same directory
-- **AND** Storybook builds without error under `pnpm --filter @hive-mind/admin-ui build-storybook`
+- **AND** Storybook builds without error under `pnpm --filter @cortex/admin-ui build-storybook`
 
 ### Requirement: Design system and styling conventions
 
@@ -187,7 +187,7 @@ The admin UI SHALL provide four new authored components, each with a `*.stories.
 
 #### Scenario: Stories exist for the new components
 
-- **WHEN** `pnpm --filter @hive-mind/admin-ui build-storybook` is run after this change ships
+- **WHEN** `pnpm --filter @cortex/admin-ui build-storybook` is run after this change ships
 - **THEN** at least one story exists for each of `StatCard`, `RankedList`, `FilterChipBar`, `BreakdownCard`
 - **AND** the Storybook build completes without errors
 

@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
-  transpilePackages: ["@hive-mind/shared"],
+  transpilePackages: ["@cortex/shared"],
 };
 
 export default nextConfig;

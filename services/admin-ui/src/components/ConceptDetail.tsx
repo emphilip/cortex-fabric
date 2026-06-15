@@ -1,4 +1,4 @@
-import type { ConceptDetail as ConceptDetailType } from "@hive-mind/shared";
+import type { ConceptDetail as ConceptDetailType } from "@cortex/shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConceptActions } from "../app/graph/GraphActions";
 import { CandidateEdgeRow } from "./CandidateEdgeRow";

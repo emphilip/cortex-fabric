@@ -1,4 +1,4 @@
-import type { VectorSearchHit } from "@hive-mind/shared";
+import type { VectorSearchHit } from "@cortex/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 

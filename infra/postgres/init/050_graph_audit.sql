@@ -1,6 +1,6 @@
 -- Audit log for state transitions on graph artifacts (concepts, edges,
 -- vocabulary). Append-only with the same row-level immutability as
--- hive_mind.audit_log: a trigger blocks DELETE entirely and blocks UPDATE
+-- cortex.audit_log: a trigger blocks DELETE entirely and blocks UPDATE
 -- on every column.
 --
 -- Required for the admin review workflow in `add-knowledge-graph`. Lives in
@@ -8,7 +8,7 @@
 -- focused on storage shape and we can rollback this layer independently
 -- if the review workflow ever needs reshaping.
 
-CREATE TABLE hive_mind.graph_audit_log (
+CREATE TABLE cortex.graph_audit_log (
   id          BIGSERIAL PRIMARY KEY,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   actor       TEXT NOT NULL,
@@ -23,16 +23,16 @@ CREATE TABLE hive_mind.graph_audit_log (
 );
 
 CREATE INDEX graph_audit_log_target_ix
-  ON hive_mind.graph_audit_log (target_id, created_at DESC);
+  ON cortex.graph_audit_log (target_id, created_at DESC);
 CREATE INDEX graph_audit_log_actor_ix
-  ON hive_mind.graph_audit_log (actor, created_at DESC);
+  ON cortex.graph_audit_log (actor, created_at DESC);
 CREATE INDEX graph_audit_log_tenant_ix
-  ON hive_mind.graph_audit_log (tenant, created_at DESC);
+  ON cortex.graph_audit_log (tenant, created_at DESC);
 
 -- Immutability: forbid UPDATE and DELETE on every column. No legal_hold
 -- escape hatch here (mirrors the discipline of audit_log; if we need one
 -- later it lands in a follow-up).
-CREATE OR REPLACE FUNCTION hive_mind.graph_audit_log_immutable()
+CREATE OR REPLACE FUNCTION cortex.graph_audit_log_immutable()
 RETURNS TRIGGER AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
@@ -46,12 +46,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER graph_audit_log_no_modify
-BEFORE UPDATE OR DELETE ON hive_mind.graph_audit_log
-FOR EACH ROW EXECUTE FUNCTION hive_mind.graph_audit_log_immutable();
+BEFORE UPDATE OR DELETE ON cortex.graph_audit_log
+FOR EACH ROW EXECUTE FUNCTION cortex.graph_audit_log_immutable();
 
 -- Apache AGE label types for the knowledge graph. We use AGE's openCypher
 -- only as a queryable index over the same edges; the source of truth lives
--- in hive_mind.relationship_edge. Bootstrapping the labels here lets the
+-- in cortex.relationship_edge. Bootstrapping the labels here lets the
 -- traversal endpoint issue Cypher without first checking-and-creating.
 --
 -- One Concept node label; one edge label per vocabulary entry. The label
@@ -66,22 +66,22 @@ BEGIN
   -- Vertex label
   IF NOT EXISTS (
     SELECT 1 FROM ag_label
-    WHERE name = 'Concept' AND graph = (SELECT graphid FROM ag_graph WHERE name = 'hive_mind')
+    WHERE name = 'Concept' AND graph = (SELECT graphid FROM ag_graph WHERE name = 'cortex')
   ) THEN
     PERFORM ag_catalog.create_vlabel(
-      'hive_mind'::cstring,
+      'cortex'::cstring,
       'Concept'::cstring
     );
   END IF;
 
   -- Edge labels (one per vocabulary entry)
-  FOR v_name IN SELECT name FROM hive_mind.relationship_vocab LOOP
+  FOR v_name IN SELECT name FROM cortex.relationship_vocab LOOP
     IF NOT EXISTS (
       SELECT 1 FROM ag_label
-      WHERE name = v_name AND graph = (SELECT graphid FROM ag_graph WHERE name = 'hive_mind')
+      WHERE name = v_name AND graph = (SELECT graphid FROM ag_graph WHERE name = 'cortex')
     ) THEN
       PERFORM ag_catalog.create_elabel(
-        'hive_mind'::cstring,
+        'cortex'::cstring,
         v_name::cstring
       );
     END IF;
@@ -90,5 +90,5 @@ END
 $$;
 
 -- Grants for the application user.
-GRANT SELECT, INSERT ON hive_mind.graph_audit_log TO hive;
-GRANT USAGE, SELECT ON hive_mind.graph_audit_log_id_seq TO hive;
+GRANT SELECT, INSERT ON cortex.graph_audit_log TO cortex;
+GRANT USAGE, SELECT ON cortex.graph_audit_log_id_seq TO cortex;

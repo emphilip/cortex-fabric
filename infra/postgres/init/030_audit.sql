@@ -1,7 +1,7 @@
 -- Append-only audit log. Immutable by trigger; only legal_hold may be flipped on.
 -- Partition by week so retention is a single DROP per partition.
 
-CREATE TABLE hive_mind.audit_log (
+CREATE TABLE cortex.audit_log (
   id                 BIGSERIAL,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   correlation_id     TEXT NOT NULL,
@@ -28,22 +28,22 @@ CREATE TABLE hive_mind.audit_log (
   PRIMARY KEY (id, created_at)
 ) PARTITION BY RANGE (created_at);
 
-CREATE INDEX audit_log_correlation_ix ON hive_mind.audit_log (correlation_id);
-CREATE INDEX audit_log_principal_ix   ON hive_mind.audit_log (principal, created_at DESC);
-CREATE INDEX audit_log_tenant_ix      ON hive_mind.audit_log (tenant, created_at DESC);
+CREATE INDEX audit_log_correlation_ix ON cortex.audit_log (correlation_id);
+CREATE INDEX audit_log_principal_ix   ON cortex.audit_log (principal, created_at DESC);
+CREATE INDEX audit_log_tenant_ix      ON cortex.audit_log (tenant, created_at DESC);
 
 -- Default partition catches rows outside an explicit weekly partition. A
 -- future enrichment job pre-creates next-week partitions.
-CREATE TABLE hive_mind.audit_log_default PARTITION OF hive_mind.audit_log DEFAULT;
+CREATE TABLE cortex.audit_log_default PARTITION OF cortex.audit_log DEFAULT;
 
 -- Immutability: forbid DELETE entirely; allow UPDATE only when the sole change
 -- is legal_hold flipping FALSE -> TRUE. Implemented by overwriting NEW's
 -- legal_hold with OLD's and asserting row-equality with OLD.
-CREATE OR REPLACE FUNCTION hive_mind.audit_log_immutable()
+CREATE OR REPLACE FUNCTION cortex.audit_log_immutable()
 RETURNS TRIGGER AS $$
 DECLARE
   legal_hold_change BOOLEAN := (NEW.legal_hold IS DISTINCT FROM OLD.legal_hold);
-  cmp hive_mind.audit_log;
+  cmp cortex.audit_log;
 BEGIN
   IF TG_OP = 'DELETE' THEN
     RAISE EXCEPTION 'audit_log: DELETE forbidden';
@@ -66,5 +66,5 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER audit_log_no_update
-BEFORE UPDATE OR DELETE ON hive_mind.audit_log
-FOR EACH ROW EXECUTE FUNCTION hive_mind.audit_log_immutable();
+BEFORE UPDATE OR DELETE ON cortex.audit_log
+FOR EACH ROW EXECUTE FUNCTION cortex.audit_log_immutable();

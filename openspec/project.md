@@ -1,12 +1,12 @@
-# Hive Mind — Project Context
+# Cortex — Project Context
 
-Hive Mind is an open-source, self-hostable implementation of an enterprise context-engineering pipeline. It exposes a private knowledge catalogue to any AI tool through MCP, learns continuously from usage, and lets humans review and edit the catalogue (vector neighbourhoods and a named-relationship graph) through an admin UI.
+Cortex is an open-source, self-hostable implementation of an enterprise context-engineering pipeline. It exposes a private knowledge catalogue to any AI tool through MCP, learns continuously from usage, and lets humans review and edit the catalogue (vector neighbourhoods and a named-relationship graph) through an admin UI.
 
 ## Vision
 
 > "If your AI architecture is just your LLM tool RAG-ing against a vector database, you don't have an AI architecture. You have one component."
 
-Hive Mind builds out the missing components: identity, intent, hybrid retrieval, catalog/graph enrichment, rerank + compression, entitlement, audit, continuous enrichment, and an inspection UI. Every stage is independently testable, observable, and replaceable.
+Cortex builds out the missing components: identity, intent, hybrid retrieval, catalog/graph enrichment, rerank + compression, entitlement, audit, continuous enrichment, and an inspection UI. Every stage is independently testable, observable, and replaceable.
 
 ## Reference architecture
 

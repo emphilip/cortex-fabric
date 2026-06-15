@@ -2,7 +2,7 @@
 
 General-purpose LLMs are trained on general-purpose knowledge. Enterprise standards, taxonomy, patterns, and policies are specific to each organization and never reach the training data. A single LLM tool RAG-ing against a vector database is one component — not an AI architecture.
 
-Hive Mind is an open-source, self-hostable implementation of the reference contextual-layer pipeline. It is a dockerized set of services that exposes an organization's (or individual's) private knowledge to any AI tool — Claude, Cursor, open-weight models, in-house agents — through a single MCP endpoint. Every stage of the pipeline is independently testable and observable; the knowledge catalogue is reviewable and editable (vector neighbourhoods and a named-relationship graph) via an admin UI; and the system learns continuously from usage. Open-source components are preferred; light Anthropic models (Haiku) and local Ollama models are the default model backends.
+Cortex is an open-source, self-hostable implementation of the reference contextual-layer pipeline. It is a dockerized set of services that exposes an organization's (or individual's) private knowledge to any AI tool — Claude, Cursor, open-weight models, in-house agents — through a single MCP endpoint. Every stage of the pipeline is independently testable and observable; the knowledge catalogue is reviewable and editable (vector neighbourhoods and a named-relationship graph) via an admin UI; and the system learns continuously from usage. Open-source components are preferred; light Anthropic models (Haiku) and local Ollama models are the default model backends.
 
 ## What Changes
 

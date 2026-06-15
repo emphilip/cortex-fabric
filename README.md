@@ -1,8 +1,8 @@
-# Hive Mind
+# Cortex
 
 > Open-source, self-hostable enterprise context engineering — exposed as MCP.
 
-Hive Mind is a dockerized set of services that lets a single person or an organization run a private knowledge catalogue and serve it to any AI tool (Claude, Cursor, open-weight models, in-house agents) through a single MCP endpoint. It implements the contextual-layer pipeline — identity, intent classification, hybrid retrieval, catalog/graph enrichment, rerank + token-budget compression, entitlement, audit — and learns continuously from usage. Open-source components are preferred; local Ollama models are the default embeddings backend, with light Anthropic models (Haiku) reserved for chat/intent paths in follow-up changes.
+Cortex is a dockerized set of services that lets a single person or an organization run a private knowledge catalogue and serve it to any AI tool (Claude, Cursor, open-weight models, in-house agents) through a single MCP endpoint. It implements the contextual-layer pipeline — identity, intent classification, hybrid retrieval, catalog/graph enrichment, rerank + token-budget compression, entitlement, audit — and learns continuously from usage. Open-source components are preferred; local Ollama models are the default embeddings backend, with light Anthropic models (Haiku) reserved for chat/intent paths in follow-up changes.
 
 > "If your AI architecture is just your LLM tool RAG-ing against a vector database, you don't have an AI architecture. You have one component."
 
@@ -31,7 +31,7 @@ Code-side ingestion uses [graphifyy](https://github.com/safishamsi/graphify) (MI
 cp .env.example .env
 make up-d
 
-# 2. Ingest a small public git repo
+# 2. Ingest a public git repo
 make ingest-git REPO=https://github.com/anthropics/anthropic-cookbook
 
 # 3. Hit the MCP/pipeline directly to retrieve context
@@ -47,6 +47,12 @@ curl -sS -X POST http://localhost:8000/retrieve \
 
 # 4. Open the admin UI: http://localhost:3000/queries
 ```
+
+Run the deterministic full-stack verification with `make smoke`. It builds a
+temporary local Git fixture, uses local embeddings plus an Ollama-compatible
+chat stub, verifies OTel spans, and enforces a five-minute deadline. A real
+provider canary is opt-in via `make smoke-cloud`; it is capped at one document
+and two chunks.
 
 The admin UI ships five pages:
 
@@ -70,13 +76,13 @@ The admin UI ships five pages:
 
 ## What's actually in the v0 stack today
 
-- **TypeScript MCP server** (`services/mcp-server`) advertising five tools. `hive_mind/retrieve_for_context` and `hive_mind/traverse_graph` are live; the other three return `not_implemented_in_mvp`.
+- **TypeScript MCP server** (`services/mcp-server`) advertising five tools. `cortex/retrieve_for_context` and `cortex/traverse_graph` are live; the other three return `not_implemented_in_mvp`.
 - **Python retrieval pipeline** (`services/pipeline`) with four stages: identity → hybrid retrieval (Qdrant dense + Postgres FTS lexical, fused via RRF) → assemble (budget + hardcoded role→classification allow-list) → return.
-- **Python ingestion** (`services/ingestion`) with a `hive-mind-ingest git <url>` CLI: clone, chunk, embed, write Postgres + Qdrant, derive code relationships with graphifyy, and extract candidate text relationships with the configured chat model.
+- **Python ingestion** (`services/ingestion`) with a `cortex-ingest git <url>` CLI: clone, chunk, embed, write Postgres + Qdrant, derive code relationships with graphifyy, and extract candidate text relationships with the configured chat model.
 - **Next.js admin UI** (`services/admin-ui`) with query, vector, content, ingestion, and graph-review pages. Storybook includes stories for every shared component.
 - **Storage**: Postgres 16 + Apache AGE for the catalog, audit, and named knowledge graph; Qdrant for vectors; Valkey for cache; plus compose-internal Ollama embeddings.
-- **Observability emission**: OTel spans per stage with token attributes; Prometheus counters at `/metrics`. The collector + Grafana stack is a follow-up change.
-- **Immutable audit log** at `hive_mind.audit_log` (partitioned by week, row-level immutability trigger).
+- **Observability emission**: OTel spans per stage with token attributes; Prometheus counters at `/metrics`; a compose-local OTel Collector accepts and logs development traces. The full Tempo/Grafana stack is a follow-up change.
+- **Immutable audit log** at `cortex.audit_log` (partitioned by week, row-level immutability trigger).
 
 What is NOT in v0: intent classifier, OPA enforcement, Confluence/custom-API/web connectors, background enrichment workers, the Tempo/Loki/Prometheus/Grafana stack, `local-prod` compose profile, real auth.
 

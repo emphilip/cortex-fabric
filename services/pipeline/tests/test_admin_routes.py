@@ -15,11 +15,11 @@ import httpx
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from hive_mind_shared import HiveMindConfig
+from cortex_shared import CortexConfig
 
-from hive_mind_pipeline import admin_routes
-from hive_mind_pipeline.providers import EmbeddingResult
-from hive_mind_pipeline.storage.vector import VectorHit
+from cortex_pipeline import admin_routes
+from cortex_pipeline.providers import EmbeddingResult
+from cortex_pipeline.storage.vector import VectorHit
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +104,7 @@ def _mount(
 ) -> TestClient:
     app = FastAPI()
     app.include_router(admin_routes.router)
-    app.state.cfg = HiveMindConfig()
+    app.state.cfg = CortexConfig()
     app.state.tracer = FakeTracer()
     app.state.catalog = catalog or FakeCatalog()
     app.state.vector = vector or FakeVector(hits=[])

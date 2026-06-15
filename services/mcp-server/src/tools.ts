@@ -9,7 +9,7 @@ import type {
   RetrievalResponse,
   TraverseRequest,
   TraverseResponse,
-} from "@hive-mind/shared";
+} from "@cortex/shared";
 import type { McpConfig } from "./config.js";
 import { PipelineRequestError, type PipelineClient } from "./pipeline-client.js";
 
@@ -21,14 +21,14 @@ export type ToolName =
   | "submit_feedback";
 
 export interface ToolDefinition {
-  name: `hive_mind/${ToolName}`;
+  name: `cortex/${ToolName}`;
   description: string;
   inputSchema: Record<string, unknown>;
 }
 
 export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
-    name: "hive_mind/retrieve_for_context",
+    name: "cortex/retrieve_for_context",
     description:
       "Retrieve context fragments from the knowledge catalogue for a natural language query. Returns ordered fragments fitting a token budget, plus per-stage usage telemetry and a correlation_id that links back to the immutable audit record.",
     inputSchema: {
@@ -44,7 +44,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "hive_mind/search",
+    name: "cortex/search",
     description: "Lightweight search returning entity IDs + scores. (Not implemented in thin MVP.)",
     inputSchema: {
       type: "object",
@@ -54,7 +54,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "hive_mind/get_entity",
+    name: "cortex/get_entity",
     description: "Fetch a single entity by ID. (Not implemented in thin MVP.)",
     inputSchema: {
       type: "object",
@@ -64,7 +64,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "hive_mind/traverse_graph",
+    name: "cortex/traverse_graph",
     description:
       "Traverse confirmed named relationships from a starting concept. Candidate edges are excluded unless include_candidates is true.",
     inputSchema: {
@@ -81,7 +81,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "hive_mind/submit_feedback",
+    name: "cortex/submit_feedback",
     description: "Submit usage feedback for a prior retrieval. (Not implemented in thin MVP.)",
     inputSchema: {
       type: "object",
@@ -123,13 +123,13 @@ export async function callTool(
   ctx: ToolCallContext,
 ): Promise<RetrievalResponse | TraverseResponse | Record<string, unknown>> {
   switch (name) {
-    case "hive_mind/retrieve_for_context":
+    case "cortex/retrieve_for_context":
       return retrieveForContext(args as RetrieveContextArgs, ctx);
-    case "hive_mind/traverse_graph":
+    case "cortex/traverse_graph":
       return traverseGraph(args as TraverseRequest, ctx);
-    case "hive_mind/search":
-    case "hive_mind/get_entity":
-    case "hive_mind/submit_feedback":
+    case "cortex/search":
+    case "cortex/get_entity":
+    case "cortex/submit_feedback":
       throw new NotImplementedInMvpError(`${name} ships in a follow-up change`);
     default:
       throw new Error(`Unknown tool: ${name}`);
