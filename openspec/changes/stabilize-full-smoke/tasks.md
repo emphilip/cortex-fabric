@@ -56,4 +56,4 @@
 - [x] 8.4 Rebuild/start the development stack and confirm every service, including collector and chat stub, is healthy
 - [x] 8.5 Run `bash tests/smoke/run.sh` twice against the same persistent stack; both runs MUST pass independently within five minutes
 - [x] 8.6 Run the bounded cloud canary once and record request count, duration, extraction result, and token-accounting evidence
-- [ ] 8.7 Run `openspec validate stabilize-full-smoke --strict`, scan staged changes for secrets, commit, and push
+- [x] 8.7 Run `openspec validate stabilize-full-smoke --strict`, scan staged changes for secrets, commit, and push
