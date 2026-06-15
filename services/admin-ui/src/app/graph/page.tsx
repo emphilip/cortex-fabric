@@ -20,7 +20,7 @@ const TABS = [
 
 export default async function GraphPage({ searchParams }: { searchParams: Promise<{ tab?: string; concept_id?: string; search?: string; focus?: string; depth?: string; candidates?: string }> }) {
   const params = await searchParams;
-  const tab = params.tab || "concepts";
+  const tab = params.tab || "map";
   const depth = Math.min(Math.max(Number(params.depth) || 2, 1), 3);
   const includeCandidates = params.candidates === "1";
   const [concepts, candidates, vocabulary, detail] = await Promise.all([
