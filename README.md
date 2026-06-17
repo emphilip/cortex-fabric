@@ -81,7 +81,7 @@ Run the deterministic full-stack verification with `make smoke`. It builds a tem
 
 ## Connect your AI tools (MCP)
 
-With the stack running (`make up-d`), Cortex exposes its catalogue over the **Model Context Protocol** via the `cortex` MCP server (stdio transport). Two tools are live today — `cortex/retrieve_for_context` (hybrid retrieval) and `cortex/traverse_graph` (walk the knowledge graph); the other three return `not_implemented_in_mvp`. Any MCP-capable client can connect.
+With the stack running (`make up-d`), Cortex exposes its catalogue over the **Model Context Protocol** via the `cortex` MCP server — over **stdio** (spawn it as a subprocess) or a **remote HTTP** endpoint (connect by URL). Two tools are live today — `cortex/retrieve_for_context` (hybrid retrieval) and `cortex/traverse_graph` (walk the knowledge graph); the other three return `not_implemented_in_mvp`. Any MCP-capable client can connect.
 
 The portable way to launch it spawns the **already-built compose image** on Cortex's Docker network — no local Node, build, or absolute paths required:
 
@@ -132,6 +132,32 @@ Add the same entry to `.cursor/mcp.json` (this project) or `~/.cursor/mcp.json` 
       "args": ["run", "-i", "--rm", "--network", "cortex_default",
                "-e", "CORTEX__PIPELINE__URL=http://pipeline:8000",
                "cortex/mcp-server:local"]
+    }
+  }
+}
+```
+
+### Remote connection over HTTP (connect by URL)
+
+The server also speaks the **Streamable HTTP** transport at `http://localhost:8181/mcp` (the same port as the health checks) — so clients connect by **URL** with no subprocess, and it's reachable across the network once you expose the port (e.g. a tunnel).
+
+> **Set a token before exposing it.** With `CORTEX__MCP__HTTP_TOKEN` unset, `/mcp` is open (fine on loopback — the server logs an "unauthenticated" warning). Set it in `.env` and pass it as a bearer header to require auth.
+
+Claude Code:
+
+```bash
+claude mcp add --transport http cortex http://localhost:8181/mcp \
+  --header "Authorization: Bearer $CORTEX__MCP__HTTP_TOKEN"
+```
+
+(Drop `--header` when no token is set.) Cursor and Claude Desktop use the `url` form:
+
+```json
+{
+  "mcpServers": {
+    "cortex": {
+      "url": "http://localhost:8181/mcp",
+      "headers": { "Authorization": "Bearer YOUR_TOKEN" }
     }
   }
 }

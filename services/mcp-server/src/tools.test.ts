@@ -14,6 +14,7 @@ const config: McpConfig = {
   identity: { principal: "alice", roles: ["reader"] },
   pipelineUrl: "http://unused",
   port: 8080,
+  httpToken: null,
 };
 
 class FakePipeline {
