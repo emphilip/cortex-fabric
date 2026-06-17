@@ -5,7 +5,7 @@
 <h1 align="center">Cortex</h1>
 
 <p align="center">
-  <em>Open-source, self-hostable enterprise context engineering — exposed as MCP.</em>
+  <em>Open-source, self-hostable enterprise context layer fabric — exposed as MCP, CLI, and Retrieval API.</em>
 </p>
 
 ---
