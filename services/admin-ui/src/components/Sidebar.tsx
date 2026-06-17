@@ -21,11 +21,11 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/queries", label: "Queries", icon: ScrollText },
+  { href: "/graph", label: "Graph", icon: Waypoints },
   { href: "/vectors", label: "Vectors", icon: Search },
   { href: "/entities", label: "Entities", icon: Database },
+  { href: "/queries", label: "Queries", icon: ScrollText },
   { href: "/ingestion", label: "Ingestion", icon: GitBranch },
-  { href: "/graph", label: "Graph", icon: Waypoints },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {

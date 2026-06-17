@@ -12,10 +12,10 @@ import { getGraphConcept, listGraphConcepts, listGraphEdges, listGraphVocabulary
 export const dynamic = "force-dynamic";
 
 const TABS = [
+  { value: "map", label: "Map" },
   { value: "concepts", label: "Concepts" },
   { value: "candidates", label: "Candidate review" },
   { value: "vocabulary", label: "Vocabulary" },
-  { value: "map", label: "Map" },
 ];
 
 export default async function GraphPage({ searchParams }: { searchParams: Promise<{ tab?: string; concept_id?: string; search?: string; focus?: string; depth?: string; candidates?: string }> }) {
