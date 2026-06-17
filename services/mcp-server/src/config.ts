@@ -7,6 +7,8 @@ export interface McpConfig {
   identity: { principal: string; roles: string[] };
   pipelineUrl: string;
   port: number;
+  // Optional bearer token for the HTTP `/mcp` transport. null/empty = open.
+  httpToken: string | null;
 }
 
 function env(name: string, fallback?: string): string {
@@ -32,5 +34,6 @@ export function loadConfig(): McpConfig {
     },
     pipelineUrl: env("CORTEX__PIPELINE__URL", "http://pipeline:8000"),
     port: Number(env("CORTEX__MCP__PORT", "8080")),
+    httpToken: (process.env.CORTEX__MCP__HTTP_TOKEN ?? "").trim() || null,
   };
 }
