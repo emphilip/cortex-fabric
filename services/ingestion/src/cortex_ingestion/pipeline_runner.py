@@ -6,14 +6,21 @@ code graph for code files."""
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
+import shutil
+import tempfile
 import time
 import uuid
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
 import httpx
+from cortex_pipeline.graph.extract import extract_for_chunk
+from cortex_pipeline.providers import OllamaChat, OllamaEmbeddings
+from cortex_pipeline.storage.catalog import CatalogStore
+from cortex_pipeline.storage.vector import VectorIndex
 from cortex_shared import CortexConfig, setup_otel
 from opentelemetry import trace
 
@@ -22,10 +29,6 @@ from cortex_ingestion.connectors.git import GitDocument
 from cortex_ingestion.graph_writer import write_code_graph
 from cortex_ingestion.reextract import current_extractor_version
 from cortex_ingestion.text_graph_writer import load_vocabulary, write_text_graph
-from cortex_pipeline.graph.extract import extract_for_chunk
-from cortex_pipeline.providers import OllamaChat, OllamaEmbeddings
-from cortex_pipeline.storage.catalog import CatalogStore
-from cortex_pipeline.storage.vector import VectorIndex
 
 log = logging.getLogger(__name__)
 
@@ -80,7 +83,7 @@ async def ingest_documents(
     if chat is not None:
         try:
             vocabulary = await load_vocabulary(catalog, cfg.tenant)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             log.warning("could not load relationship vocabulary: %s", exc)
             chat = None  # without vocab the extractor would emit garbage
     parents = 0
@@ -202,7 +205,7 @@ async def ingest_documents(
                                 result=result,
                                 extractor_version=current_extractor_version(chat.model),
                             )
-                    except Exception as exc:  # noqa: BLE001
+                    except Exception as exc:
                         log.info(
                             "text extractor skipped for %s chunk %d: %s",
                             doc.source_uri,
@@ -220,7 +223,7 @@ async def ingest_documents(
                         file_entity_id=doc.entity_id,
                         graphify_result=code_graph,
                     )
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     log.warning(
                         "graph_writer failed for %s: %s", doc.source_uri, exc
                     )
@@ -238,6 +241,44 @@ async def ingest_documents(
         documents_truncated=documents_truncated,
         chunks_truncated=chunks_truncated,
     )
+
+
+def _safe_relpath(doc: GitDocument, path: Path) -> Path:
+    """The repo-relative path under which to materialise a code file.
+
+    graphifyy derives node labels and symbol ids from the file path, so we
+    must preserve the real name. The git connector only carries a relative
+    path (`doc.metadata["path"]`), which may contain a leading `/` or `..`
+    segments; strip those so the join can never escape the temp directory.
+    """
+    raw = doc.metadata.get("path") or doc.title or path.name or "file"
+    parts = [p for p in Path(raw).parts if p not in ("", ".", "..", "/", "\\")]
+    return Path(*parts) if parts else Path(path.name or "file")
+
+
+@contextlib.contextmanager
+def _materialised_code_path(doc: GitDocument, path: Path) -> Iterator[Path]:
+    """Yield an on-disk path graphifyy can read, named after the real source.
+
+    The git connector hands us only a body and a repo-relative path — never an
+    on-disk location — so for code files we write the body under its true
+    relative path inside a throwaway temp directory. If `path` is already a
+    genuine absolute file on disk (a future connector might provide one), we
+    pass it straight through without copying. The temp tree is always removed,
+    including when the caller raises.
+    """
+    if path.is_absolute() and path.exists():
+        yield path
+        return
+
+    tmpdir = tempfile.mkdtemp(prefix="cortex-code-")
+    try:
+        dest = Path(tmpdir) / _safe_relpath(doc, path)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(doc.body, encoding="utf-8")
+        yield dest
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 async def _extract_code(
@@ -260,25 +301,15 @@ async def _extract_code(
         span.set_attribute("tokens_in", 0)
         span.set_attribute("tokens_out", 0)
         try:
-            # We pass a real path to graphify — but the file may live in a temp
-            # dir we've already destroyed (the git connector yields documents
-            # eagerly). Re-materialise the body to a tmp file if the path is
-            # gone. Cheap: the same body is already in memory.
-            if not path.exists():
-                import tempfile
-
-                with tempfile.NamedTemporaryFile(
-                    "w", suffix=path.suffix, delete=False, encoding="utf-8"
-                ) as fp:
-                    fp.write(doc.body)
-                    use_path = Path(fp.name)
-            else:
-                use_path = path
-            graphify_result = gex.extract([use_path], parallel=False)
-            chunks = chunk_code_by_symbols(use_path, doc.body)
-            span.set_attribute("symbols", len(graphify_result.get("nodes", [])))
-            span.set_attribute("chunks", len(chunks))
-        except Exception as exc:  # noqa: BLE001 — best-effort per-file
+            # graphifyy names nodes/symbols after the file path, so materialise
+            # the body under its real repo-relative name (the temp tree is torn
+            # down when the context exits — including on the failure path below).
+            with _materialised_code_path(doc, path) as use_path:
+                graphify_result = gex.extract([use_path], parallel=False)
+                chunks = chunk_code_by_symbols(use_path, doc.body)
+                span.set_attribute("symbols", len(graphify_result.get("nodes", [])))
+                span.set_attribute("chunks", len(chunks))
+        except Exception as exc:
             log.warning("graphifyy failed for %s: %s; using text chunker", doc.source_uri, exc)
             span.record_exception(exc)
             return chunk_text(doc.body), None
