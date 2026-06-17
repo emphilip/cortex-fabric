@@ -79,6 +79,78 @@ open http://localhost:3000/queries
 
 Run the deterministic full-stack verification with `make smoke`. It builds a temporary local Git fixture, uses local embeddings plus an Ollama-compatible chat stub, verifies OTel spans, and enforces a five-minute deadline. A real-provider canary is opt-in via `make smoke-cloud` and is capped at one document and two chunks.
 
+## Connect your AI tools (MCP)
+
+With the stack running (`make up-d`), Cortex exposes its catalogue over the **Model Context Protocol** via the `cortex` MCP server (stdio transport). Two tools are live today — `cortex/retrieve_for_context` (hybrid retrieval) and `cortex/traverse_graph` (walk the knowledge graph); the other three return `not_implemented_in_mvp`. Any MCP-capable client can connect.
+
+The portable way to launch it spawns the **already-built compose image** on Cortex's Docker network — no local Node, build, or absolute paths required:
+
+```bash
+docker run -i --rm --network cortex_default \
+  -e CORTEX__PIPELINE__URL=http://pipeline:8000 \
+  cortex/mcp-server:local
+```
+
+> It only works while the stack is up — the server reaches the pipeline over the `cortex_default` Docker network (the compose project is named `cortex`, so the network name is stable). Stack down → the client shows a connection error.
+
+### Claude Code
+
+```bash
+claude mcp add cortex -- \
+  docker run -i --rm --network cortex_default \
+  -e CORTEX__PIPELINE__URL=http://pipeline:8000 cortex/mcp-server:local
+```
+
+Append `--scope user` to make it available in every project. Verify with `claude mcp get cortex` (expect `✓ Connected`), then ask, e.g., *"use cortex to find what the catalogue says about core banking."*
+
+### Claude Desktop
+
+Add to `claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`; Windows: `%APPDATA%\Claude\claude_desktop_config.json`), then restart Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "cortex": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "--network", "cortex_default",
+               "-e", "CORTEX__PIPELINE__URL=http://pipeline:8000",
+               "cortex/mcp-server:local"]
+    }
+  }
+}
+```
+
+### Cursor
+
+Add the same entry to `.cursor/mcp.json` (this project) or `~/.cursor/mcp.json` (all projects), then reload Cursor — it uses the identical `mcpServers` schema:
+
+```json
+{
+  "mcpServers": {
+    "cortex": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "--network", "cortex_default",
+               "-e", "CORTEX__PIPELINE__URL=http://pipeline:8000",
+               "cortex/mcp-server:local"]
+    }
+  }
+}
+```
+
+### Run on the host instead of Docker
+
+To avoid a container per session, build the server once and point it at the host-exposed pipeline:
+
+```bash
+pnpm install && pnpm --filter @cortex/mcp-server build
+```
+
+Then use `node /absolute/path/to/cortex-fabric/services/mcp-server/dist/index.js` as the command, with env `CORTEX__PIPELINE__URL=http://localhost:8000` and `CORTEX__MCP__PORT=8199` (any free port — it's only the health endpoint).
+
+### Identity
+
+Identity is stubbed in v0 (`local-dev` / roles `admin,reader` / tenant `default`). Override per client with the `CORTEX__IDENTITY__PRINCIPAL`, `CORTEX__IDENTITY__ROLES`, and `CORTEX__TENANT` environment variables.
+
 ## Admin UI
 
 | Route | What it does |
