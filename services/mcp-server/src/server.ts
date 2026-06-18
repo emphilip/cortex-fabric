@@ -22,7 +22,7 @@ import {
 
 export function buildMcpServer(ctx: ToolCallContext): Server {
   const server = new Server(
-    { name: "cortex", version: "0.0.0" },
+    { name: "opencg", version: "0.0.0" },
     { capabilities: { tools: {} } },
   );
 
@@ -89,7 +89,7 @@ export async function handleMcpHttp(
   if (!bearerAllowed(req.headers.authorization, ctx.config.httpToken)) {
     res.writeHead(401, {
       "content-type": "application/json",
-      "www-authenticate": 'Bearer realm="cortex"',
+      "www-authenticate": 'Bearer realm="opencg"',
     });
     res.end(
       JSON.stringify({ jsonrpc: "2.0", error: { code: -32001, message: "unauthorized" }, id: null }),

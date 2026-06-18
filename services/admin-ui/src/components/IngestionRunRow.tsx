@@ -1,4 +1,4 @@
-import type { IngestionRun } from "@cortex/shared";
+import type { IngestionRun } from "@opencg/shared";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 

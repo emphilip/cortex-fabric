@@ -13,8 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from cortex_ingestion import pipeline_runner
-from cortex_ingestion.connectors.git import GitDocument
+from opencg_ingestion import pipeline_runner
+from opencg_ingestion.connectors.git import GitDocument
 
 # A random-tempfile stem looks like ``tmp`` + base32-ish run of chars.
 _TMP_STEM = re.compile(r"tmp[a-z0-9]{6,}")
@@ -106,7 +106,7 @@ def test_materialised_path_sanitises_traversal():
         assert p.exists()
         # the write stays inside a temp dir, never the real /etc/passwd
         assert p.resolve() != Path("/etc/passwd")
-        assert "cortex-code-" in p.as_posix()
+        assert "opencg-code-" in p.as_posix()
 
 
 # --- _extract_code: real graphifyy naming + determinism --------------------

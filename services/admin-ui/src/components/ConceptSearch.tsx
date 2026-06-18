@@ -1,6 +1,6 @@
 "use client";
 
-import type { ConceptListItem } from "@cortex/shared";
+import type { ConceptListItem } from "@opencg/shared";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 

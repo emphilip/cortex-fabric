@@ -1,6 +1,6 @@
 # Text Graph Extractor Prompt
 
-The text extractor sends one system message and one user message to the configured chat provider. The implementation is in `services/pipeline/src/cortex_pipeline/graph/extract.py`.
+The text extractor sends one system message and one user message to the configured chat provider. The implementation is in `services/pipeline/src/opencg_pipeline/graph/extract.py`.
 
 ## System prompt
 

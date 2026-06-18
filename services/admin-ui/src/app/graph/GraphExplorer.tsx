@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { ConceptDetail as ConceptDetailType } from "@cortex/shared";
+import type { ConceptDetail as ConceptDetailType } from "@opencg/shared";
 import type { ForceGraphMethods, NodeObject, LinkObject } from "react-force-graph-2d";
 import { ConceptDetail } from "@/components/ConceptDetail";
 import { ConceptSearch } from "@/components/ConceptSearch";

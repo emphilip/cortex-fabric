@@ -1,0 +1,105 @@
+"""Stage 3 (thin MVP): hybrid retrieval = dense (Qdrant) + lexical (Postgres FTS),
+fused with Reciprocal Rank Fusion.
+
+In the thin MVP we skip Stage 2 (intent classification) and Stage 5 (rerank +
+compress); the assemble stage handles the token budget directly.
+"""
+
+from __future__ import annotations
+
+import asyncio
+from dataclasses import dataclass
+
+from opencg_pipeline.providers import OllamaEmbeddings
+from opencg_pipeline.storage.catalog import CatalogHit, CatalogStore
+from opencg_pipeline.storage.vector import VectorHit, VectorIndex
+from opencg_pipeline.util import reciprocal_rank_fusion
+
+__all__ = ["Candidate", "reciprocal_rank_fusion", "run"]
+
+
+@dataclass
+class Candidate:
+    entity_id: str
+    score: float
+    source: str
+    source_uri: str
+    title: str | None
+    text: str
+    classification: str
+    via: list[str]
+
+
+async def run(
+    *,
+    tenant: str,
+    query: str,
+    top_k: int,
+    catalog: CatalogStore,
+    vector: VectorIndex,
+    embeddings: OllamaEmbeddings,
+) -> tuple[list[Candidate], dict]:
+    """Returns (candidates, telemetry).
+
+    telemetry includes per-leg latencies, model usage, vector_collection hit list.
+    """
+    # Dense leg: embed query, search Qdrant. Lexical leg: Postgres FTS+trgm.
+    # Both run in parallel.
+    async def dense_leg() -> tuple[list[VectorHit], int, str]:
+        emb = await embeddings.embed(query)
+        hits = await vector.search(sources=None, vector=emb.vector, limit=top_k)
+        return hits, emb.tokens_in, emb.model
+
+    async def lexical_leg() -> list[CatalogHit]:
+        return await catalog.lexical_search(tenant=tenant, query=query, limit=top_k)
+
+    (dense_hits, embed_tokens_in, embed_model), lexical_hits = await asyncio.gather(
+        dense_leg(), lexical_leg()
+    )
+
+    dense_ranking = [h.entity_id for h in dense_hits]
+    lexical_ranking = [h.entity_id for h in lexical_hits]
+    fused = reciprocal_rank_fusion([dense_ranking, lexical_ranking])
+
+    # Build a lookup over both result sets so we have full text + metadata.
+    lookup: dict[str, Candidate] = {}
+    for h in dense_hits:
+        lookup[h.entity_id] = Candidate(
+            entity_id=h.entity_id,
+            score=fused.get(h.entity_id, 0.0),
+            source=h.payload.get("source", "unknown"),
+            source_uri=h.payload.get("source_uri", ""),
+            title=h.payload.get("title"),
+            text=h.payload.get("text", ""),
+            classification=h.payload.get("classification", "internal"),
+            via=["dense"],
+        )
+    for c in lexical_hits:
+        if c.entity_id in lookup:
+            lookup[c.entity_id].via.append("lexical")
+            # Prefer Postgres text if Qdrant payload was missing it.
+            if not lookup[c.entity_id].text:
+                lookup[c.entity_id].text = c.text
+                lookup[c.entity_id].title = c.title
+            continue
+        lookup[c.entity_id] = Candidate(
+            entity_id=c.entity_id,
+            score=fused.get(c.entity_id, 0.0),
+            source=c.source,
+            source_uri=c.source_uri,
+            title=c.title,
+            text=c.text,
+            classification=c.classification,
+            via=["lexical"],
+        )
+
+    candidates = sorted(lookup.values(), key=lambda c: c.score, reverse=True)[:top_k]
+
+    telemetry = {
+        "dense_count": len(dense_hits),
+        "lexical_count": len(lexical_hits),
+        "fused_count": len(candidates),
+        "embed_tokens_in": embed_tokens_in,
+        "embed_model": embed_model,
+    }
+    return candidates, telemetry

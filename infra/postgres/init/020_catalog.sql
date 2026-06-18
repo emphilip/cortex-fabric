@@ -1,15 +1,15 @@
 -- Catalog tables. These are the v0 set used by the thin MVP retrieval path.
 -- Future changes (knowledge-graph, background-enrichment) extend, not replace.
 
-CREATE SCHEMA IF NOT EXISTS cortex;
+CREATE SCHEMA IF NOT EXISTS opencg;
 
-CREATE TABLE cortex.entity (
+CREATE TABLE opencg.entity (
   entity_id        UUID PRIMARY KEY,
   tenant           TEXT NOT NULL,
   source           TEXT NOT NULL,
   source_uri       TEXT NOT NULL,
   source_revision  TEXT,
-  parent_entity_id UUID REFERENCES cortex.entity(entity_id) ON DELETE CASCADE,
+  parent_entity_id UUID REFERENCES opencg.entity(entity_id) ON DELETE CASCADE,
   title            TEXT,
   body             TEXT NOT NULL,                 -- raw text stored for replay + admin UI
   content_hash     TEXT NOT NULL,
@@ -24,9 +24,9 @@ CREATE TABLE cortex.entity (
   tombstoned_at    TIMESTAMPTZ
 );
 
-CREATE UNIQUE INDEX entity_source_uri_uq ON cortex.entity (tenant, source, source_uri);
-CREATE INDEX entity_classification_ix    ON cortex.entity (tenant, classification);
-CREATE INDEX entity_freshness_ix         ON cortex.entity (tenant, freshness_state);
-CREATE INDEX entity_body_trgm_ix         ON cortex.entity USING gin (body gin_trgm_ops);
-CREATE INDEX entity_title_trgm_ix        ON cortex.entity USING gin (title gin_trgm_ops);
-CREATE INDEX entity_body_fts_ix          ON cortex.entity USING gin (to_tsvector('simple', coalesce(title,'') || ' ' || body));
+CREATE UNIQUE INDEX entity_source_uri_uq ON opencg.entity (tenant, source, source_uri);
+CREATE INDEX entity_classification_ix    ON opencg.entity (tenant, classification);
+CREATE INDEX entity_freshness_ix         ON opencg.entity (tenant, freshness_state);
+CREATE INDEX entity_body_trgm_ix         ON opencg.entity USING gin (body gin_trgm_ops);
+CREATE INDEX entity_title_trgm_ix        ON opencg.entity USING gin (title gin_trgm_ops);
+CREATE INDEX entity_body_fts_ix          ON opencg.entity USING gin (to_tsvector('simple', coalesce(title,'') || ' ' || body));

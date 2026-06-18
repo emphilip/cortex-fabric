@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from cortex_pipeline.storage.vector import VectorIndex
+from opencg_pipeline.storage.vector import VectorIndex
 
 
 @dataclass

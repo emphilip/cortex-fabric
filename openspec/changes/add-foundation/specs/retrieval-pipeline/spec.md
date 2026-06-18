@@ -56,7 +56,7 @@ Given the same query, identity, model versions, and storage snapshot, the pipeli
 
 ### Requirement: Per-stage token accounting
 
-Every stage that invokes a model SHALL record `model`, `tokens_in`, `tokens_out`, `latency_ms`, and `provider` on its span and write a counter increment under `cortex_tokens_total{stage,model,provider,tenant}`.
+Every stage that invokes a model SHALL record `model`, `tokens_in`, `tokens_out`, `latency_ms`, and `provider` on its span and write a counter increment under `opencg_tokens_total{stage,model,provider,tenant}`.
 
 #### Scenario: Embeddings stage accounting
 

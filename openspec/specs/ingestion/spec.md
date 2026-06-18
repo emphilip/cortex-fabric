@@ -136,11 +136,11 @@ Edge handling:
 
 ### Requirement: Re-extract CLI subcommand
 
-The `cortex-ingest` CLI SHALL gain a `re-extract` subcommand that walks every chunk in the catalog (filtered optionally by `--source` and `--since`) and runs `extract_for_chunk` against each. The subcommand SHALL be idempotent (skip chunks whose latest evidence row was written by the current or newer extractor version) and SHALL respect the same `extraction.timeout_seconds` and best-effort error handling as the connector hook.
+The `opencg-ingest` CLI SHALL gain a `re-extract` subcommand that walks every chunk in the catalog (filtered optionally by `--source` and `--since`) and runs `extract_for_chunk` against each. The subcommand SHALL be idempotent (skip chunks whose latest evidence row was written by the current or newer extractor version) and SHALL respect the same `extraction.timeout_seconds` and best-effort error handling as the connector hook.
 
 #### Scenario: Re-extract uses latest version filtering
 
-- **WHEN** the operator runs `cortex-ingest re-extract --source git` and the configured `extractor_version` is `v2`
+- **WHEN** the operator runs `opencg-ingest re-extract --source git` and the configured `extractor_version` is `v2`
 - **THEN** chunks whose latest `relationship_evidence` row already has `extractor_version = "v2"` are skipped
 - **AND** chunks with no evidence row OR an older version are re-extracted
 

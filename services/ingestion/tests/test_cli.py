@@ -1,7 +1,7 @@
 from click.testing import CliRunner
 
-from cortex_ingestion.cli import main
-from cortex_ingestion.pipeline_runner import IngestionSummary
+from opencg_ingestion.cli import main
+from opencg_ingestion.pipeline_runner import IngestionSummary
 
 
 def test_git_cli_rejects_non_positive_limits():
@@ -14,9 +14,9 @@ def test_git_cli_rejects_non_positive_limits():
 
 
 def test_git_cli_reports_limits_and_truncation(monkeypatch):
-    monkeypatch.setattr("cortex_ingestion.cli.load_config", lambda: object())
+    monkeypatch.setattr("opencg_ingestion.cli.load_config", lambda: object())
     monkeypatch.setattr(
-        "cortex_ingestion.cli.run_sync",
+        "opencg_ingestion.cli.run_sync",
         lambda *args, **kwargs: IngestionSummary(
             parents=1,
             chunks=2,

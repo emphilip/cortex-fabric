@@ -1,8 +1,8 @@
-# Cortex — Agent guide
+# Open Context Graph — Agent guide
 
-> **This file is the canonical agent guide. It is duplicated to `CLAUDE.md` and `.cursor/rules/cortex.mdc` so the three tools that respect different file conventions all see the same instructions. If you update one, update the others (or run `make sync-agent-files` if it exists).**
+> **This file is the canonical agent guide. It is duplicated to `CLAUDE.md` and `.cursor/rules/opencg.mdc` so the three tools that respect different file conventions all see the same instructions. If you update one, update the others (or run `make sync-agent-files` if it exists).**
 
-You are working on **Cortex** — an open-source, self-hostable enterprise context-engineering pipeline that exposes a private knowledge catalogue to any AI tool through MCP. Read this file before doing anything else.
+You are working on **Open Context Graph** (openCG) — an open-source, self-hostable enterprise context-engineering pipeline that exposes a private knowledge catalogue to any AI tool through MCP. Read this file before doing anything else.
 
 ## Project rule #1: OpenSpec is mandatory for every feature
 
@@ -66,9 +66,9 @@ Check the live state any time with `openspec list`.
 - **Python tests against asyncpg**: use a fake `_Pool` / `_Conn` pattern that records SQL + args. See `services/pipeline/tests/test_catalog.py` for the canonical example.
 - **Admin UI components**: every shared component lives in `src/components/` and MUST have a `*.stories.tsx` neighbour. The `add-admin-vector-and-content` admin-ui spec is load-bearing on this rule.
 - **Client → pipeline calls**: client components go through Next route handlers under `src/app/api/proxy/...`. The pipeline URL is compose-internal, not reachable from the browser.
-- **Compose ports**: use `${CORTEX__SERVICE__HOST_PORT:-default}` so collisions can be dodged via `.env`.
-- **Audit logs are append-only**: enforced by triggers on `cortex.audit_log` and `cortex.graph_audit_log`. Don't UPDATE them; write a state-transition row instead.
-- **Token accounting on every model call**: emit an OTel span attribute AND increment `cortex_tokens_total{stage,model,provider,tenant,direction}`. The spec's "per-stage token accounting" requirement is non-negotiable.
+- **Compose ports**: use `${OPENCG__SERVICE__HOST_PORT:-default}` so collisions can be dodged via `.env`.
+- **Audit logs are append-only**: enforced by triggers on `opencg.audit_log` and `opencg.graph_audit_log`. Don't UPDATE them; write a state-transition row instead.
+- **Token accounting on every model call**: emit an OTel span attribute AND increment `opencg_tokens_total{stage,model,provider,tenant,direction}`. The spec's "per-stage token accounting" requirement is non-negotiable.
 - **Best-effort extraction**: ingest-time chat-model calls (the upcoming knowledge-graph extractor) MUST NOT fail the ingest on extractor errors. Log + counter + continue.
 
 ## Where stuff lives
@@ -116,7 +116,7 @@ Admin UI pages: `/queries`, `/vectors`, `/entities`, `/ingestion`. (`/graph` onc
 - **`uv sync --package X --package Y` does not work**. Use `uv sync --all-packages` or one `--package` at a time.
 - **Storybook 8 + Next 15.5**: incompatible (`@storybook/nextjs` chokes on a webpack hook). We use `@storybook/react-vite` with tiny `next/link` + `next/navigation` mocks in `.storybook/mocks/`.
 - **Compose shell-var escaping**: use `$$VAR` inside healthcheck CMD-SHELL strings so the container shell — not docker compose — evaluates the substitution.
-- **Port 8080 collision** on the user's machine (something called `nominatim` runs there). The MCP server uses host port 8181, configurable via `CORTEX__MCP__HOST_PORT`.
+- **Port 8080 collision** on the user's machine (something called `nominatim` runs there). The MCP server uses host port 8181, configurable via `OPENCG__MCP__HOST_PORT`.
 - **asyncpg + JSONB columns**: serialise dicts with `json.dumps(...)` before binding. Otherwise: `invalid input for query argument: expected str, got dict`.
 - **MEMORY.md and per-user memory** live in `~/.claude/projects/...`, NOT in the repo. A new session won't see them. That's why this file exists.
 

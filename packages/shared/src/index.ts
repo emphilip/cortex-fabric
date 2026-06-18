@@ -1,5 +1,5 @@
 // Wire types shared between MCP server and admin UI. Pydantic mirrors in
-// packages/shared-py/cortex_shared/types.py — keep in sync.
+// packages/shared-py/opencg_shared/types.py — keep in sync.
 
 export interface IdentityContext {
   principal: string;

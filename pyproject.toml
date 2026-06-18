@@ -1,5 +1,5 @@
 [project]
-name = "cortex-context-fabric"
+name = "opencg-context-fabric"
 version = "0.0.0"
 description = "Open-source, self-hostable enterprise context engineering, exposed as MCP."
 readme = "README.md"
@@ -14,7 +14,7 @@ members = [
 ]
 
 [tool.uv.sources]
-cortex-shared = { workspace = true }
+opencg-shared = { workspace = true }
 
 [tool.ruff]
 line-length = 100

@@ -2,12 +2,12 @@
 
 ### Requirement: Named relationship types
 
-In v0 the Apache AGE extension SHALL be loaded and the `cortex` graph SHALL be created at DB init so a follow-up change can add edges without schema migrations. The vocabulary table, relationship CRUD, and traversal API MUST be added by the follow-up change that ships the `knowledge-graph` capability end-to-end.
+In v0 the Apache AGE extension SHALL be loaded and the `opencg` graph SHALL be created at DB init so a follow-up change can add edges without schema migrations. The vocabulary table, relationship CRUD, and traversal API MUST be added by the follow-up change that ships the `knowledge-graph` capability end-to-end.
 
 #### Scenario: AGE is loaded but no edges are reachable in v0
 
 - **WHEN** the operator inspects the database schema in the thin MVP
-- **THEN** the `ag_catalog` schema is present and the `cortex` AGE graph exists
+- **THEN** the `ag_catalog` schema is present and the `opencg` AGE graph exists
 - **AND** no API exposes graph traversal in v0
 
 ### Requirement: Automatic relationship extraction
@@ -31,11 +31,11 @@ The system SHALL NOT expose any candidate-edge review, promote, edit, or delete 
 
 ### Requirement: Graph traversal API
 
-The MCP `cortex/traverse_graph` tool SHALL return `not_implemented_in_mvp` in v0. A follow-up change MUST replace this with a working traversal implementation backed by AGE.
+The MCP `opencg/traverse_graph` tool SHALL return `not_implemented_in_mvp` in v0. A follow-up change MUST replace this with a working traversal implementation backed by AGE.
 
 #### Scenario: `traverse_graph` is unimplemented in v0
 
-- **WHEN** an MCP client calls `cortex/traverse_graph`
+- **WHEN** an MCP client calls `opencg/traverse_graph`
 - **THEN** the server returns `code = "not_implemented_in_mvp"`
 
 ### Requirement: Concept clustering for review

@@ -36,7 +36,7 @@ def build_content(user_text: str) -> str:
                     "from": catalogue,
                     "relation": "related_to",
                     "to": context,
-                    "evidence_span": "The Cortex catalogue is related to context windows.",
+                    "evidence_span": "The openCG catalogue is related to context windows.",
                     "confidence": 0.99,
                 }
             ],

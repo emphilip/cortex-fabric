@@ -1,4 +1,4 @@
-import type { ConceptListItem, RelationshipEdge } from "@cortex/shared";
+import type { ConceptListItem, RelationshipEdge } from "@opencg/shared";
 
 export interface GraphNode {
   id: string;

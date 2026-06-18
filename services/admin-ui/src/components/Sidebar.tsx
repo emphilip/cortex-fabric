@@ -38,7 +38,7 @@ function NavContent({ pathname }: { pathname: string }) {
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 px-4 py-5">
         <Hexagon className="h-5 w-5 text-primary" />
-        <span className="text-base font-semibold tracking-tight">cortex</span>
+        <span className="text-base font-semibold tracking-tight">opencg</span>
       </div>
       <nav className="flex-1 space-y-1 px-2">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
@@ -88,7 +88,7 @@ export function Sidebar() {
             </div>
           </SheetContent>
         </Sheet>
-        <span className="text-sm font-semibold">cortex</span>
+        <span className="text-sm font-semibold">opencg</span>
       </div>
     </>
   );

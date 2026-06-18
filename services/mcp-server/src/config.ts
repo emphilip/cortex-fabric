@@ -1,5 +1,5 @@
 // Tiny config loader for the TS MCP server: env-vars only (the source of
-// truth is cortex.yaml consumed by the Python services; the MCP server
+// truth is opencg.yaml consumed by the Python services; the MCP server
 // only needs identity-stub + pipeline URL).
 
 export interface McpConfig {
@@ -28,20 +28,20 @@ function env(name: string, fallback?: string): string {
 
 export function loadConfig(): McpConfig {
   return {
-    tenant: env("CORTEX__TENANT", "default"),
+    tenant: env("OPENCG__TENANT", "default"),
     identity: {
-      principal: env("CORTEX__IDENTITY__PRINCIPAL", "local-dev"),
-      roles: env("CORTEX__IDENTITY__ROLES", "admin,reader")
+      principal: env("OPENCG__IDENTITY__PRINCIPAL", "local-dev"),
+      roles: env("OPENCG__IDENTITY__ROLES", "admin,reader")
         .split(",")
         .map((r) => r.trim())
         .filter(Boolean),
     },
-    pipelineUrl: env("CORTEX__PIPELINE__URL", "http://pipeline:8000"),
-    port: Number(env("CORTEX__MCP__PORT", "8080")),
-    httpToken: (process.env.CORTEX__MCP__HTTP_TOKEN ?? "").trim() || null,
+    pipelineUrl: env("OPENCG__PIPELINE__URL", "http://pipeline:8000"),
+    port: Number(env("OPENCG__MCP__PORT", "8080")),
+    httpToken: (process.env.OPENCG__MCP__HTTP_TOKEN ?? "").trim() || null,
     publicUrl:
-      (process.env.CORTEX__MCP__PUBLIC_URL ?? "").trim() ||
-      `http://localhost:${env("CORTEX__MCP__PORT", "8080")}`,
-    oauthPassword: (process.env.CORTEX__MCP__OAUTH_PASSWORD ?? "").trim() || null,
+      (process.env.OPENCG__MCP__PUBLIC_URL ?? "").trim() ||
+      `http://localhost:${env("OPENCG__MCP__PORT", "8080")}`,
+    oauthPassword: (process.env.OPENCG__MCP__OAUTH_PASSWORD ?? "").trim() || null,
   };
 }

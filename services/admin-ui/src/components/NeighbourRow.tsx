@@ -1,6 +1,6 @@
 "use client";
 
-import type { Neighbour } from "@cortex/shared";
+import type { Neighbour } from "@opencg/shared";
 import { RelationshipTypeBadge } from "./RelationshipTypeBadge";
 
 export function NeighbourRow({

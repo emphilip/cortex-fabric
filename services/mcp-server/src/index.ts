@@ -1,5 +1,5 @@
 // MCP server entry point. Serves health endpoints and the MCP protocol over
-// stdio + Streamable HTTP (`/mcp`). When CORTEX__MCP__OAUTH_PASSWORD is set, it
+// stdio + Streamable HTTP (`/mcp`). When OPENCG__MCP__OAUTH_PASSWORD is set, it
 // also mounts the SDK's OAuth router so OAuth-only clients (claude.ai) can
 // connect — see src/oauth.ts (a temporary stopgap).
 
@@ -38,7 +38,7 @@ async function main() {
       staticToken: config.httpToken,
     });
     const issuerUrl = new URL(config.publicUrl);
-    app.use(mcpAuthRouter({ provider, issuerUrl, resourceName: "Cortex MCP" }));
+    app.use(mcpAuthRouter({ provider, issuerUrl, resourceName: "openCG MCP" }));
     app.post("/oauth/approve", express.urlencoded({ extended: false }), approveHandler);
     const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(issuerUrl);
     app.all(
@@ -66,7 +66,7 @@ async function main() {
     } else if (!config.httpToken) {
       // eslint-disable-next-line no-console
       console.error(
-        "[mcp-server] WARNING: HTTP /mcp transport is UNAUTHENTICATED — set CORTEX__MCP__HTTP_TOKEN (or CORTEX__MCP__OAUTH_PASSWORD) before exposing this port.",
+        "[mcp-server] WARNING: HTTP /mcp transport is UNAUTHENTICATED — set OPENCG__MCP__HTTP_TOKEN (or OPENCG__MCP__OAUTH_PASSWORD) before exposing this port.",
       );
     }
   });

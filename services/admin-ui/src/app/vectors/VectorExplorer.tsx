@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { VectorSearchHit, VectorSearchResponse } from "@cortex/shared";
+import type { VectorSearchHit, VectorSearchResponse } from "@opencg/shared";
 import { VectorHit } from "@/components/VectorHit";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

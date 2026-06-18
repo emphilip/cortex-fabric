@@ -1,6 +1,6 @@
 ## Context
 
-The reference architecture frames "enterprise context engineering" as a discipline that must be built, tested, and owned independently of any single LLM. Each layer of the pipeline has its own contract, telemetry, and failure mode. Cortex implements that pipeline as a self-hostable, open-source, dockerized stack that any AI tool can consume through MCP. Open-source components are preferred; light Anthropic models (Haiku) and local Ollama models are the default backends. The v0 deployment model is **single-tenant per docker-compose stack** — multi-tenant isolation is out of scope.
+The reference architecture frames "enterprise context engineering" as a discipline that must be built, tested, and owned independently of any single LLM. Each layer of the pipeline has its own contract, telemetry, and failure mode. openCG implements that pipeline as a self-hostable, open-source, dockerized stack that any AI tool can consume through MCP. Open-source components are preferred; light Anthropic models (Haiku) and local Ollama models are the default backends. The v0 deployment model is **single-tenant per docker-compose stack** — multi-tenant isolation is out of scope.
 
 The reference architecture image (`docs/reference-architecture/`) is the source of truth for the pipeline shape. This document records the implementation decisions that diverge from or refine it.
 
@@ -62,7 +62,7 @@ Telemetry: OTel collector → Tempo / Loki / Prometheus / Grafana
 **Non-Goals:**
 - Multi-tenant SaaS isolation in v0. Tenants run separate stacks. The data model carries a `tenant` slug only to keep the door open.
 - Real authentication in v0. Identity is stubbed; the propagation contract is set so auth can be added later without touching downstream stages.
-- Fine-tuning / training pipelines for embeddings or rerankers — Cortex selects pre-trained models via adapters.
+- Fine-tuning / training pipelines for embeddings or rerankers — openCG selects pre-trained models via adapters.
 - An end-user "ask the LLM" chat UI. We are the context layer, not the consumer.
 - Bring-your-own-graph-database. Postgres + Apache AGE is the only graph implementation in v0.
 
@@ -110,13 +110,13 @@ Telemetry: OTel collector → Tempo / Loki / Prometheus / Grafana
 
 ### D6. Identity stub now, contract correct
 
-**Choice**: v0 ships with a hardcoded principal and roles loaded from `cortex.yaml`. The MCP server attaches them to every outbound pipeline call and accepts a caller-supplied `x-correlation-id`. OPA evaluates the same identity shape it will evaluate against real JWTs in a later change.
+**Choice**: v0 ships with a hardcoded principal and roles loaded from `opencg.yaml`. The MCP server attaches them to every outbound pipeline call and accepts a caller-supplied `x-correlation-id`. OPA evaluates the same identity shape it will evaluate against real JWTs in a later change.
 
 **Rationale**: Auth is the slowest possible thing to get wrong, and we don't want the pipeline contracts to leak from "no identity" to "identity exists". Lock the shape now, plug a real verifier in later without touching stages 3-7.
 
 ### D7. Single config file, env-overrideable
 
-**Choice**: A single `cortex.yaml` configures providers, connectors, freshness, audit retention, telemetry endpoints, and entitlement defaults. Environment variables override file values via `CORTEX__<SECTION>__<KEY>` convention.
+**Choice**: A single `opencg.yaml` configures providers, connectors, freshness, audit retention, telemetry endpoints, and entitlement defaults. Environment variables override file values via `OPENCG__<SECTION>__<KEY>` convention.
 
 **Rationale**: Operators consistently report flat ENV + one file as the easiest config to reason about. Avoids the 12-factor purist trap of scattering config across many env vars while keeping CI/CD ergonomic.
 
@@ -165,6 +165,6 @@ Rollback for an individual capability is "stop the service, run the down migrati
 
 - **OQ1**: Do we want a Python or TypeScript SDK for ingestion connectors first? The framework is Python (D1), but a TypeScript connector SDK would let admins write web-indexing rules close to the MCP layer. Defer to the second change.
 - **OQ2**: Should the rerank stage be allowed to *re-query* the catalog/graph based on what the cross-encoder learned? Currently it only re-orders. Revisit after we have real query traces.
-- **OQ3**: Where does prompt-template management live? The retrieval pipeline emits assembled context; the actual prompt the downstream LLM uses is not Cortex's concern in v0. If we later want to ship "prompt packs" for clients, that's a new capability.
+- **OQ3**: Where does prompt-template management live? The retrieval pipeline emits assembled context; the actual prompt the downstream LLM uses is not openCG's concern in v0. If we later want to ship "prompt packs" for clients, that's a new capability.
 - **OQ4**: Per-tenant policy bundles vs. one global OPA bundle. We chose global for v0 (single-tenant deploys); revisit if/when a multi-tenant change is proposed.
 - **OQ5**: Choice of sparse encoder for hybrid search — start with BM25 (Qdrant native), revisit SPLADE once we have a corpus to benchmark on.

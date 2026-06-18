@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from cortex_pipeline.storage.catalog import CatalogStore
+from opencg_pipeline.storage.catalog import CatalogStore
 
 
 class _Acquire:

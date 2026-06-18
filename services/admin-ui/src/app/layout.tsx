@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata = {
-  title: "Cortex — Admin",
+  title: "openCG — Admin",
   description: "Inspect queries, audits, and provider health.",
 };
 

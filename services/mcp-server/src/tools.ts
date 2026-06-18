@@ -9,7 +9,7 @@ import type {
   RetrievalResponse,
   TraverseRequest,
   TraverseResponse,
-} from "@cortex/shared";
+} from "@opencg/shared";
 import type { McpConfig } from "./config.js";
 import { PipelineRequestError, type PipelineClient } from "./pipeline-client.js";
 
@@ -21,14 +21,14 @@ export type ToolName =
   | "submit_feedback";
 
 export interface ToolDefinition {
-  name: `cortex/${ToolName}`;
+  name: `opencg/${ToolName}`;
   description: string;
   inputSchema: Record<string, unknown>;
 }
 
 export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
-    name: "cortex/retrieve_for_context",
+    name: "opencg/retrieve_for_context",
     description:
       "Retrieve context fragments from the knowledge catalogue for a natural language query. Returns ordered fragments fitting a token budget, plus per-stage usage telemetry and a correlation_id that links back to the immutable audit record.",
     inputSchema: {
@@ -44,7 +44,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "cortex/search",
+    name: "opencg/search",
     description: "Lightweight search returning entity IDs + scores. (Not implemented in thin MVP.)",
     inputSchema: {
       type: "object",
@@ -54,7 +54,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "cortex/get_entity",
+    name: "opencg/get_entity",
     description: "Fetch a single entity by ID. (Not implemented in thin MVP.)",
     inputSchema: {
       type: "object",
@@ -64,7 +64,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "cortex/traverse_graph",
+    name: "opencg/traverse_graph",
     description:
       "Traverse confirmed named relationships from a starting concept. Candidate edges are excluded unless include_candidates is true.",
     inputSchema: {
@@ -81,7 +81,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     },
   },
   {
-    name: "cortex/submit_feedback",
+    name: "opencg/submit_feedback",
     description: "Submit usage feedback for a prior retrieval. (Not implemented in thin MVP.)",
     inputSchema: {
       type: "object",
@@ -123,13 +123,13 @@ export async function callTool(
   ctx: ToolCallContext,
 ): Promise<RetrievalResponse | TraverseResponse | Record<string, unknown>> {
   switch (name) {
-    case "cortex/retrieve_for_context":
+    case "opencg/retrieve_for_context":
       return retrieveForContext(args as RetrieveContextArgs, ctx);
-    case "cortex/traverse_graph":
+    case "opencg/traverse_graph":
       return traverseGraph(args as TraverseRequest, ctx);
-    case "cortex/search":
-    case "cortex/get_entity":
-    case "cortex/submit_feedback":
+    case "opencg/search":
+    case "opencg/get_entity":
+    case "opencg/submit_feedback":
       throw new NotImplementedInMvpError(`${name} ships in a follow-up change`);
     default:
       throw new Error(`Unknown tool: ${name}`);

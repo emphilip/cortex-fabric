@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from cortex_pipeline.stages.hybrid_retrieval import reciprocal_rank_fusion
+from opencg_pipeline.stages.hybrid_retrieval import reciprocal_rank_fusion
 
 
 def test_rrf_combines_rankings():

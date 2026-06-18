@@ -6,7 +6,7 @@ Expose retrieval, catalogue administration, vector search, and ingestion control
 ## Requirements
 ### Requirement: Per-stage token accounting
 
-Every stage that invokes a model SHALL record `model`, `provider`, `tokens_in`, `tokens_out` (when the response carries them), and `latency_ms` on its OTel span AND increment `cortex_tokens_total{stage,model,provider,tenant,direction}`.
+Every stage that invokes a model SHALL record `model`, `provider`, `tokens_in`, `tokens_out` (when the response carries them), and `latency_ms` on its OTel span AND increment `opencg_tokens_total{stage,model,provider,tenant,direction}`.
 
 Text relationship extraction MUST use `stage="graph_extract_text"` and emit an OTel span named `pipeline.graph_extract_text`. Deterministic Graphifyy extraction MUST use `stage="graph_extract_code"` and emit an OTel span named `pipeline.graph_extract_code` with `model="graphifyy"`, `provider="graphifyy"`, and zero tokens; it MUST NOT increment the token counter.
 
@@ -14,13 +14,13 @@ Text relationship extraction MUST use `stage="graph_extract_text"` and emit an O
 
 - **WHEN** the ingestion service runs the extractor on a chunk and the chat model returns a usable response
 - **THEN** an OTel span `pipeline.graph_extract_text` is emitted with `model`, `provider`, `tokens_in`, `tokens_out`, and `latency_ms`
-- **AND** `cortex_tokens_total{stage="graph_extract_text"}` increases by the recorded counts
+- **AND** `opencg_tokens_total{stage="graph_extract_text"}` increases by the recorded counts
 
 #### Scenario: Code extraction emits a token-zero span
 
 - **WHEN** the ingestion service runs Graphifyy on a code file
 - **THEN** an OTel span `pipeline.graph_extract_code` is emitted with zero token attributes
-- **AND** `cortex_tokens_total{stage="graph_extract_code"}` is not incremented
+- **AND** `opencg_tokens_total{stage="graph_extract_code"}` is not incremented
 
 #### Scenario: Other stages unchanged
 
@@ -70,7 +70,7 @@ The endpoint MUST NOT write an audit row. It MUST emit an OTel span and incremen
 - **WHEN** a client calls `POST /search/vector` with `{"query":"prompt caching","top_k":10}`
 - **THEN** the response contains up to 10 hits ordered by `score` desc
 - **AND** the response carries the embedding `model`, `provider`, and `tokens_in`
-- **AND** no row is written to `cortex.audit_log`
+- **AND** no row is written to `opencg.audit_log`
 
 #### Scenario: Vector search top_k cap
 
@@ -129,7 +129,7 @@ All endpoints MUST be read-only (no audit-row write side effects).
 
 ### Requirement: Graph admin write endpoints
 
-The pipeline service SHALL expose graph admin write endpoints. Each MUST be idempotent where the operation is semantically idempotent (re-promoting an already-confirmed edge is a no-op), and every state transition MUST persist a row in `cortex.graph_audit_log`.
+The pipeline service SHALL expose graph admin write endpoints. Each MUST be idempotent where the operation is semantically idempotent (re-promoting an already-confirmed edge is a no-op), and every state transition MUST persist a row in `opencg.graph_audit_log`.
 
 - `POST /graph/concepts/{id}/promote` — `{reason?}` → `state = confirmed`.
 - `POST /graph/concepts/{id}/demote` — `{reason?}` → `state = candidate`.
@@ -170,9 +170,9 @@ The pipeline service SHALL expose a callable `extract_for_chunk(chunk_text, chun
 2. Parse the response into a `Pydantic` `ExtractionResult` (concepts + relations).
 3. Drop relations whose `confidence < min_confidence` (configurable).
 4. Upsert concepts and edges in `candidate` state, write evidence rows, and reflect into AGE — all in a single transaction.
-5. Emit the `pipeline.graph_extract` OTel span and the per-relation `cortex_extractor_edges_total{relation,state}` counter.
+5. Emit the `pipeline.graph_extract` OTel span and the per-relation `opencg_extractor_edges_total{relation,state}` counter.
 
-Failures MUST raise to the caller AND increment `cortex_extractor_errors_total{reason}`. The ingestion service catches and logs the exception so the chunk still completes.
+Failures MUST raise to the caller AND increment `opencg_extractor_errors_total{reason}`. The ingestion service catches and logs the exception so the chunk still completes.
 
 #### Scenario: Successful extraction inserts concepts and edges in one transaction
 

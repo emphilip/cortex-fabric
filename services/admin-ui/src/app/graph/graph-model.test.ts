@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ConceptListItem, RelationshipEdge } from "@cortex/shared";
+import type { ConceptListItem, RelationshipEdge } from "@opencg/shared";
 import { buildGraphModel, labelVisibility, type TraverseData } from "./graph-model";
 
 function concept(id: string, overrides: Partial<ConceptListItem> = {}): ConceptListItem {

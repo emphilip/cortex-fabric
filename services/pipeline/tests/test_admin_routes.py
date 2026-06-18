@@ -15,11 +15,11 @@ import httpx
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from cortex_shared import CortexConfig
+from opencg_shared import openCGConfig
 
-from cortex_pipeline import admin_routes
-from cortex_pipeline.providers import EmbeddingResult
-from cortex_pipeline.storage.vector import VectorHit
+from opencg_pipeline import admin_routes
+from opencg_pipeline.providers import EmbeddingResult
+from opencg_pipeline.storage.vector import VectorHit
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +104,7 @@ def _mount(
 ) -> TestClient:
     app = FastAPI()
     app.include_router(admin_routes.router)
-    app.state.cfg = CortexConfig()
+    app.state.cfg = openCGConfig()
     app.state.tracer = FakeTracer()
     app.state.catalog = catalog or FakeCatalog()
     app.state.vector = vector or FakeVector(hits=[])

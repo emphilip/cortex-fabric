@@ -31,16 +31,16 @@ ps: ## List services
 test: test-mcp test-pipeline test-ingestion test-ui ## Run all unit tests
 
 test-mcp:
-	pnpm --filter @cortex/mcp-server test
+	pnpm --filter @opencg/mcp-server test
 
 test-pipeline:
-	uv run --package cortex-pipeline pytest services/pipeline/tests
+	uv run --package opencg-pipeline pytest services/pipeline/tests
 
 test-ingestion:
-	uv run --package cortex-ingestion pytest services/ingestion/tests
+	uv run --package opencg-ingestion pytest services/ingestion/tests
 
 test-ui:
-	pnpm --filter @cortex/admin-ui test
+	pnpm --filter @opencg/admin-ui test
 
 lint:
 	pnpm -r lint
@@ -51,7 +51,7 @@ format:
 	uv run ruff format .
 
 ingest-git: ## Ingest a git repo: `make ingest-git REPO=https://github.com/...`
-	$(COMPOSE) exec ingestion uv run --package cortex-ingestion python -m cortex_ingestion.cli git "$(REPO)"
+	$(COMPOSE) exec ingestion uv run --package opencg-ingestion python -m opencg_ingestion.cli git "$(REPO)"
 
 smoke: ## End-to-end smoke test
 	./tests/smoke/run.sh

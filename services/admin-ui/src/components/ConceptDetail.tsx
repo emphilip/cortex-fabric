@@ -1,6 +1,6 @@
 "use client";
 
-import type { ConceptDetail as ConceptDetailType, Neighbour } from "@cortex/shared";
+import type { ConceptDetail as ConceptDetailType, Neighbour } from "@opencg/shared";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

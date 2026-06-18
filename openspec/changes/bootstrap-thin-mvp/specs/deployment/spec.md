@@ -22,13 +22,13 @@ The compose stack SHALL expose only the `dev` profile in v0. The `local-prod` pr
 
 ### Requirement: Configuration model
 
-A single `cortex.yaml` file SHALL configure the deployment. Environment variables MUST override file values using the convention `CORTEX__<SECTION>__<KEY>` with double underscores between nesting levels.
+A single `opencg.yaml` file SHALL configure the deployment. Environment variables MUST override file values using the convention `OPENCG__<SECTION>__<KEY>` with double underscores between nesting levels.
 
 In v0 the file MUST cover identity stub, storage URLs (Postgres, Qdrant, Valkey), Ollama embeddings (`base_url`, `embedding_model`, optional `api_key`), retrieval defaults (`default_top_k`, `default_token_budget`, `tokens_per_char`), audit retention placeholder, and telemetry endpoint placeholder. Sections for deferred capabilities are introduced by their respective follow-up changes.
 
 #### Scenario: Override Ollama base URL via env
 
-- **WHEN** `CORTEX__OLLAMA__BASE_URL` is set to `http://other-host:11434`
+- **WHEN** `OPENCG__OLLAMA__BASE_URL` is set to `http://other-host:11434`
 - **THEN** the pipeline and ingestion services target that URL for embeddings
 
 ### Requirement: Health and readiness

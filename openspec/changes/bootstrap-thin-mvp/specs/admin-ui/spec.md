@@ -51,7 +51,7 @@ The admin UI SHALL NOT expose entity-level content management in v0. A follow-up
 
 ### Requirement: Content ingestion control
 
-The admin UI SHALL NOT expose connector control in v0. Operators MUST trigger ingestion via the `cortex-ingest` CLI in v0; a follow-up change adds the UI surface.
+The admin UI SHALL NOT expose connector control in v0. Operators MUST trigger ingestion via the `opencg-ingest` CLI in v0; a follow-up change adds the UI surface.
 
 #### Scenario: Ingestion control is absent in v0
 
@@ -66,7 +66,7 @@ The admin UI SHALL ship a Storybook configuration. Every shared component (`Quer
 
 #### Scenario: Storybook starts without error
 
-- **WHEN** an operator runs `pnpm --filter @cortex/admin-ui storybook`
+- **WHEN** an operator runs `pnpm --filter @opencg/admin-ui storybook`
 - **THEN** Storybook starts on port 6006 and renders the v0 stories
 
 #### Scenario: Components used in app routes also exist as stories

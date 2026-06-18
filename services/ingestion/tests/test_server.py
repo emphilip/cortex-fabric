@@ -11,10 +11,10 @@ from typing import Callable
 
 import pytest
 from fastapi.testclient import TestClient
-from cortex_shared import CortexConfig
+from opencg_shared import openCGConfig
 
-from cortex_ingestion import server as srv
-from cortex_ingestion.runs import RunStore
+from opencg_ingestion import server as srv
+from opencg_ingestion.runs import RunStore
 
 
 @pytest.fixture
@@ -24,10 +24,10 @@ def make_client(monkeypatch):
     def _build(ingest: Callable | None = None):
         app = srv.app
 
-        async def default_ingest(repo_url: str, cfg: CortexConfig):
+        async def default_ingest(repo_url: str, cfg: openCGConfig):
             return (1, 2)
 
-        async def chosen_ingest(repo_url: str, cfg: CortexConfig):
+        async def chosen_ingest(repo_url: str, cfg: openCGConfig):
             if ingest is None:
                 return await default_ingest(repo_url, cfg)
             return await ingest(repo_url, cfg)
@@ -35,7 +35,7 @@ def make_client(monkeypatch):
         monkeypatch.setattr(srv, "ingest_run", chosen_ingest)
         # Pre-populate the state the lifespan would normally set up so we can
         # use a synchronous TestClient without spinning up Postgres.
-        app.state.cfg = CortexConfig()
+        app.state.cfg = openCGConfig()
         app.state.runs = RunStore(cap=10)
         return TestClient(app)
 
@@ -80,7 +80,7 @@ def test_run_git_then_runs_recent_reflects_success(make_client):
 
 
 def test_run_git_failure_records_error(make_client):
-    async def failing(repo_url: str, cfg: CortexConfig):
+    async def failing(repo_url: str, cfg: openCGConfig):
         raise RuntimeError("clone refused")
 
     client = make_client(ingest=failing)

@@ -2,11 +2,11 @@
 
 ### Requirement: Connector framework
 
-In v0 the ingestion surface SHALL be a single `cortex-ingest` CLI binary with one subcommand per connector. There MUST NOT be a scheduler, runtime discovery, or `list_changes(since)` API in v0. The full framework (`discover`, `fetch`, `list_changes`, `chunk`, `metadata`) MUST be reintroduced by the follow-up change that ships the second connector.
+In v0 the ingestion surface SHALL be a single `opencg-ingest` CLI binary with one subcommand per connector. There MUST NOT be a scheduler, runtime discovery, or `list_changes(since)` API in v0. The full framework (`discover`, `fetch`, `list_changes`, `chunk`, `metadata`) MUST be reintroduced by the follow-up change that ships the second connector.
 
 #### Scenario: CLI exposes the git subcommand
 
-- **WHEN** the operator runs `cortex-ingest git <repo-url>` against a running stack
+- **WHEN** the operator runs `opencg-ingest git <repo-url>` against a running stack
 - **THEN** the CLI ingests the repository and exits `0` on success
 
 ### Requirement: Git connector
@@ -17,8 +17,8 @@ In v0 the connector MUST NOT support incremental sync; re-ingest MUST be idempot
 
 #### Scenario: Ingest a small public repo end-to-end
 
-- **WHEN** the operator runs `cortex-ingest git https://github.com/<owner>/<repo>` and the storage layer is healthy
-- **THEN** new rows appear in `cortex.entity` with `source = "git"` and `source_revision` set to the cloned commit SHA
+- **WHEN** the operator runs `opencg-ingest git https://github.com/<owner>/<repo>` and the storage layer is healthy
+- **THEN** new rows appear in `opencg.entity` with `source = "git"` and `source_revision` set to the cloned commit SHA
 - **AND** one vector point per chunk is upserted into the `git` Qdrant collection
 
 #### Scenario: Re-ingest with unchanged content is idempotent
@@ -33,7 +33,7 @@ The system SHALL NOT include a Confluence connector in v0. A follow-up change MU
 
 #### Scenario: Confluence is unsupported in v0
 
-- **WHEN** the operator runs `cortex-ingest confluence ...` in the thin MVP
+- **WHEN** the operator runs `opencg-ingest confluence ...` in the thin MVP
 - **THEN** the CLI exits non-zero with a message naming `not_implemented_in_mvp`
 
 ### Requirement: Custom HTTP API connector
@@ -42,7 +42,7 @@ The system SHALL NOT include a custom HTTP API connector in v0. A follow-up chan
 
 #### Scenario: Custom API is unsupported in v0
 
-- **WHEN** the operator runs `cortex-ingest custom-api ...` in the thin MVP
+- **WHEN** the operator runs `opencg-ingest custom-api ...` in the thin MVP
 - **THEN** the CLI exits non-zero with a message naming `not_implemented_in_mvp`
 
 ### Requirement: Web indexer
@@ -51,7 +51,7 @@ The system SHALL NOT include a web indexer in v0. A follow-up change MUST add it
 
 #### Scenario: Web indexer is unsupported in v0
 
-- **WHEN** the operator runs `cortex-ingest web ...` in the thin MVP
+- **WHEN** the operator runs `opencg-ingest web ...` in the thin MVP
 - **THEN** the CLI exits non-zero with a message naming `not_implemented_in_mvp`
 
 ### Requirement: Idempotency and content hashing

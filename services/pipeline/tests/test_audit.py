@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from cortex_pipeline.storage.audit import AuditStore
+from opencg_pipeline.storage.audit import AuditStore
 
 
 class _Acquire:

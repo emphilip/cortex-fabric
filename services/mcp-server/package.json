@@ -1,11 +1,11 @@
 {
-  "name": "@cortex/mcp-server",
+  "name": "@opencg/mcp-server",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
-    "cortex-mcp": "./dist/index.js"
+    "opencg-mcp": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -16,7 +16,7 @@
     "format": "echo 'no formatter'"
   },
   "dependencies": {
-    "@cortex/shared": "workspace:*",
+    "@opencg/shared": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "express": "^5.2.1",
     "undici": "^7.0.0"

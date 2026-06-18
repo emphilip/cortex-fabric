@@ -8,7 +8,7 @@ SMOKE_TIMEOUT_SECONDS="${SMOKE_TIMEOUT_SECONDS:-300}"
 SMOKE_INGEST_TIMEOUT_SECONDS="${SMOKE_INGEST_TIMEOUT_SECONDS:-120}"
 SMOKE_CHAT_MODE="${SMOKE_CHAT_MODE:-stub}"
 RUN_ID="$(date -u +%Y%m%d%H%M%S)-$$"
-REPO_NAME="cortex-smoke-$RUN_ID"
+REPO_NAME="opencg-smoke-$RUN_ID"
 FIXTURE_DIR="/tmp/$REPO_NAME"
 SOURCE_PREFIX="git://$REPO_NAME/"
 START_SECONDS=$SECONDS
@@ -49,7 +49,7 @@ kill_ingestion_children() {
     for proc in /proc/[0-9]*; do
       cmd=$(tr "\0" " " < "$proc/cmdline" 2>/dev/null || true)
       case "$cmd" in
-        *"cortex_ingestion.cli git"*) kill "${proc##*/}" 2>/dev/null || true ;;
+        *"opencg_ingestion.cli git"*) kill "${proc##*/}" 2>/dev/null || true ;;
       esac
     done
   ' >/dev/null 2>&1 || true
@@ -116,7 +116,7 @@ run_timed() {
 
 psql_value() {
   "${COMPOSE[@]}" exec -T postgres \
-    psql -U cortex -d cortex -tA -F '|' -c "$1" | tr -d '\r'
+    psql -U opencg -d opencg -tA -F '|' -c "$1" | tr -d '\r'
 }
 
 say "Wait for pipeline and smoke dependencies"
@@ -163,13 +163,13 @@ say "Construct isolated local Git fixture"
   destination=$1
   run_id=$2
   rm -rf "$destination"
-  cp -R /opt/cortex/smoke-fixture "$destination"
+  cp -R /opt/opencg/smoke-fixture "$destination"
   sed -i "s/SMOKE_RUN_ID/$run_id/g" "$destination/README.md"
   if [ "$3" = "cloud" ]; then
     rm -f "$destination/context_tools.py"
   fi
   git -C "$destination" init -q
-  git -C "$destination" config user.name "Cortex Smoke"
+  git -C "$destination" config user.name "openCG Smoke"
   git -C "$destination" config user.email "smoke@localhost"
   git -C "$destination" add .
   git -C "$destination" commit -qm "smoke fixture"
@@ -181,18 +181,18 @@ INGEST_ARGS=(
 )
 if [ "$SMOKE_CHAT_MODE" = "stub" ]; then
   INGEST_ARGS+=(
-    -e CORTEX__PROVIDERS__CHAT__BASE_URL=http://smoke-chat:11434
-    -e CORTEX__PROVIDERS__CHAT__MODEL=smoke-chat
-    -e CORTEX__PROVIDERS__CHAT__API_KEY=
+    -e OPENCG__PROVIDERS__CHAT__BASE_URL=http://smoke-chat:11434
+    -e OPENCG__PROVIDERS__CHAT__MODEL=smoke-chat
+    -e OPENCG__PROVIDERS__CHAT__API_KEY=
   )
   MAX_DOCUMENTS=10
   MAX_CHUNKS=20
 elif [ "$SMOKE_CHAT_MODE" = "cloud" ]; then
   "${COMPOSE[@]}" exec -T ingestion sh -c '
-    test -n "${CORTEX__PROVIDERS__CHAT__BASE_URL:-}" &&
-    test -n "${CORTEX__PROVIDERS__CHAT__MODEL:-}" &&
-    test -n "${CORTEX__PROVIDERS__CHAT__API_KEY:-}"
-  ' || fail "cloud mode requires chat base URL, model, and CORTEX__PROVIDERS__CHAT__API_KEY"
+    test -n "${OPENCG__PROVIDERS__CHAT__BASE_URL:-}" &&
+    test -n "${OPENCG__PROVIDERS__CHAT__MODEL:-}" &&
+    test -n "${OPENCG__PROVIDERS__CHAT__API_KEY:-}"
+  ' || fail "cloud mode requires chat base URL, model, and OPENCG__PROVIDERS__CHAT__API_KEY"
   MAX_DOCUMENTS=1
   MAX_CHUNKS=2
 else
@@ -200,8 +200,8 @@ else
 fi
 INGEST_ARGS+=(
   ingestion
-  uv run --package cortex-ingestion
-  python -m cortex_ingestion.cli git "$FIXTURE_DIR"
+  uv run --package opencg-ingestion
+  python -m opencg_ingestion.cli git "$FIXTURE_DIR"
   --max-documents "$MAX_DOCUMENTS"
   --max-chunks "$MAX_CHUNKS"
 )
@@ -226,9 +226,9 @@ if [ "$SMOKE_CHAT_MODE" = "cloud" ]; then
   say "Verify bounded cloud extraction"
   CLOUD_EDGE_COUNT="$(psql_value "
     SELECT count(*)
-    FROM cortex.relationship_edge edge
-    JOIN cortex.relationship_evidence evidence ON evidence.edge_id = edge.edge_id
-    JOIN cortex.entity entity ON entity.entity_id = evidence.entity_id
+    FROM opencg.relationship_edge edge
+    JOIN opencg.relationship_evidence evidence ON evidence.edge_id = edge.edge_id
+    JOIN opencg.entity entity ON entity.entity_id = evidence.entity_id
     WHERE entity.source_uri LIKE '${SOURCE_PREFIX}%'
       AND edge.extractor_version LIKE 'text-extractor/%'
   ")"
@@ -296,7 +296,7 @@ pass "vector search returned a current-run hit"
 say "Tombstone a current-run chunk"
 ENTITY_ID="$(psql_value "
   SELECT entity_id
-  FROM cortex.entity
+  FROM opencg.entity
   WHERE source_uri LIKE '${SOURCE_PREFIX}%'
     AND parent_entity_id IS NOT NULL
     AND tombstoned_at IS NULL
@@ -322,12 +322,12 @@ CODE_COUNTS="$(psql_value "
     count(DISTINCT c.concept_id),
     count(DISTINCT e.edge_id),
     count(DISTINCT chunk.entity_id)
-  FROM cortex.entity parent
-  LEFT JOIN cortex.concept c ON c.source_entity_id = parent.entity_id
-  LEFT JOIN cortex.relationship_evidence ev ON ev.entity_id = parent.entity_id
-  LEFT JOIN cortex.relationship_edge e
+  FROM opencg.entity parent
+  LEFT JOIN opencg.concept c ON c.source_entity_id = parent.entity_id
+  LEFT JOIN opencg.relationship_evidence ev ON ev.entity_id = parent.entity_id
+  LEFT JOIN opencg.relationship_edge e
     ON e.edge_id = ev.edge_id AND e.extractor_version LIKE 'graphifyy/%'
-  LEFT JOIN cortex.entity chunk
+  LEFT JOIN opencg.entity chunk
     ON chunk.parent_entity_id = parent.entity_id AND chunk.metadata ? 'symbol_id'
   WHERE parent.source_uri LIKE '${SOURCE_PREFIX}%'
 ")"
@@ -352,9 +352,9 @@ pass "seven seeded relationship names present"
 say "Resolve current-run candidate relationship"
 EDGE_ROW="$(psql_value "
   SELECT e.edge_id, e.from_concept_id
-  FROM cortex.relationship_edge e
-  JOIN cortex.relationship_evidence ev ON ev.edge_id = e.edge_id
-  JOIN cortex.entity entity ON entity.entity_id = ev.entity_id
+  FROM opencg.relationship_edge e
+  JOIN opencg.relationship_evidence ev ON ev.edge_id = e.edge_id
+  JOIN opencg.entity entity ON entity.entity_id = ev.entity_id
   WHERE entity.source_uri LIKE '${SOURCE_PREFIX}%'
     AND e.state = 'candidate'
     AND e.extractor_version LIKE 'text-extractor/%'
@@ -386,7 +386,7 @@ printf '%s' "$PROMOTED" | python3 -c \
   'import json,sys; assert json.load(sys.stdin)["state"] == "confirmed"'
 GRAPH_AUDIT_COUNT="$(psql_value "
   SELECT count(*)
-  FROM cortex.graph_audit_log
+  FROM opencg.graph_audit_log
   WHERE target_kind = 'edge'
     AND target_id = '$EDGE_ID'
     AND to_state = 'confirmed'
@@ -407,7 +407,7 @@ case "$OTEL_ENDPOINT_NORMALIZED" in
     FOUND_SPANS=false
     for _ in $(seq 1 20); do
       OTEL_LOGS="$("${COMPOSE[@]}" logs --since "$SMOKE_STARTED_AT" otel-collector 2>&1 || true)"
-      if grep -q 'service.name.*cortex-ingestion' <<<"$OTEL_LOGS" \
+      if grep -q 'service.name.*opencg-ingestion' <<<"$OTEL_LOGS" \
         && grep -q 'pipeline.graph_extract_code' <<<"$OTEL_LOGS" \
         && grep -q 'pipeline.graph_extract_text' <<<"$OTEL_LOGS" \
         && grep -q 'tokens_in' <<<"$OTEL_LOGS"; then

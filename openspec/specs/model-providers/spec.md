@@ -41,7 +41,7 @@ The chat client MUST:
 
 ### Requirement: ProviderConfig block
 
-The `cortex.yaml` config SHALL gain a `providers` section with sub-blocks `embeddings` and `chat`. Each sub-block carries `provider`, `model`, `base_url`, and optional `api_key`. The existing `ollama` block stays for backwards compatibility (its values populate `providers.embeddings` if `providers.embeddings` is absent). Environment overrides MUST work via `CORTEX__PROVIDERS__CHAT__MODEL` etc.
+The `opencg.yaml` config SHALL gain a `providers` section with sub-blocks `embeddings` and `chat`. Each sub-block carries `provider`, `model`, `base_url`, and optional `api_key`. The existing `ollama` block stays for backwards compatibility (its values populate `providers.embeddings` if `providers.embeddings` is absent). Environment overrides MUST work via `OPENCG__PROVIDERS__CHAT__MODEL` etc.
 
 #### Scenario: Defaults wire Cloud chat and local embeddings
 
@@ -51,11 +51,11 @@ The `cortex.yaml` config SHALL gain a `providers` section with sub-blocks `embed
 
 #### Scenario: Backwards compatibility with `ollama` block
 
-- **WHEN** a deployment's `cortex.yaml` still has only the old `ollama:` block (no `providers:` section)
+- **WHEN** a deployment's `opencg.yaml` still has only the old `ollama:` block (no `providers:` section)
 - **THEN** `providers.embeddings` is populated from `ollama.*`
 - **AND** `providers.chat` falls back to `{provider:ollama, base_url:http://ollama:11434, model:gemma3:4b, api_key:null}` so existing local deployments keep working without Cloud
 
 #### Scenario: Env override for chat model
 
-- **WHEN** `CORTEX__PROVIDERS__CHAT__MODEL` is set to `kimi-k2`
+- **WHEN** `OPENCG__PROVIDERS__CHAT__MODEL` is set to `kimi-k2`
 - **THEN** the chat client uses `kimi-k2` regardless of the YAML value

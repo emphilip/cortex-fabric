@@ -1,1 +1,0 @@
-"""Cortex retrieval pipeline service."""

@@ -51,9 +51,9 @@ Live probes on 2026-06-11 against `https://ollama.com` using the configured API 
 
 ### D3. The embedding model is configurable; `nomic-embed-text` is the default
 
-**Decision:** Keep `CORTEX__OLLAMA__EMBEDDING_MODEL` env-overridable. Default to `nomic-embed-text` (768-dim, fast on CPU, the value already wired into Qdrant's collection vector size).
+**Decision:** Keep `OPENCG__OLLAMA__EMBEDDING_MODEL` env-overridable. Default to `nomic-embed-text` (768-dim, fast on CPU, the value already wired into Qdrant's collection vector size).
 
-**Rationale:** users on bigger hardware can swap to `bge-m3` or `qwen3-embedding` by changing one env var and the Qdrant collection's vector size in `cortex.yaml`. Default stays small so the first-start model pull is bounded.
+**Rationale:** users on bigger hardware can swap to `bge-m3` or `qwen3-embedding` by changing one env var and the Qdrant collection's vector size in `opencg.yaml`. Default stays small so the first-start model pull is bounded.
 
 ### D4. Provider-adapter abstraction is explicitly deferred
 
@@ -71,7 +71,7 @@ The thin MVP code (Phases A–H, 41 tests green) implements the spec deltas in t
 
 - **Risk:** `ollama/ollama` image first-start downloads ~270 MB for `nomic-embed-text` and may make `make smoke` flaky on slow networks. → Mitigation: healthcheck waits on `ollama list` returning the model; document the one-time delay in README.
 - **Risk:** Compose service users (laptops) may not have GPU passthrough configured. → Mitigation: `nomic-embed-text` runs fine on CPU; document GPU as optional in `docs/OPERATIONS.md` follow-up.
-- **Risk:** Qdrant collection vector size (768) is hard-coded for `nomic-embed-text` in `cortex.yaml`. Swapping to a model with a different dimension breaks search until the collection is recreated. → Mitigation: keep `vector_size` in `cortex.yaml` adjacent to `embedding_model` so the link is obvious; admin UI for collection management is a follow-up.
+- **Risk:** Qdrant collection vector size (768) is hard-coded for `nomic-embed-text` in `opencg.yaml`. Swapping to a model with a different dimension breaks search until the collection is recreated. → Mitigation: keep `vector_size` in `opencg.yaml` adjacent to `embedding_model` so the link is obvious; admin UI for collection management is a follow-up.
 - **Risk:** Storing the Ollama Cloud key in `.env` while not using it is a footgun. → Mitigation: `.env.example` comment explicitly notes the key is reserved for follow-up chat use and is unused by the thin MVP.
 
 ## Migration Plan
@@ -79,9 +79,9 @@ The thin MVP code (Phases A–H, 41 tests green) implements the spec deltas in t
 The thin-MVP code is already in place. The remaining work to satisfy this change:
 
 1. Add an `ollama` service (image + healthcheck + named volume + pre-pull entrypoint) to `infra/compose/docker-compose.yml`.
-2. Flip the default `CORTEX__OLLAMA__BASE_URL` back to `http://ollama:11434` in `.env.example` and `cortex.yaml`. Move the Ollama Cloud example into commented documentation.
+2. Flip the default `OPENCG__OLLAMA__BASE_URL` back to `http://ollama:11434` in `.env.example` and `opencg.yaml`. Move the Ollama Cloud example into commented documentation.
 3. Update `.env` to point at the compose Ollama. Keep the Cloud key commented for future use.
-4. Update `services/pipeline/src/cortex_pipeline/app.py` and the ingestion pipeline runner to handle both the legacy `/api/embeddings` and the newer `/api/embed` response shapes (we already accept both).
+4. Update `services/pipeline/src/opencg_pipeline/app.py` and the ingestion pipeline runner to handle both the legacy `/api/embeddings` and the newer `/api/embed` response shapes (we already accept both).
 5. Append a note to `add-foundation/tasks.md` pointing at this change as the source of truth for the thin MVP.
 6. Run `make up-d` then `tests/smoke/run.sh` and capture the result.
 

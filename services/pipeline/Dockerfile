@@ -20,9 +20,9 @@ COPY services/pipeline /app/services/pipeline
 
 RUN uv sync --no-dev --all-packages
 
-ENV CORTEX_CONFIG=/app/cortex.yaml
-COPY cortex.yaml /app/cortex.yaml
+ENV OPENCG_CONFIG=/app/opencg.yaml
+COPY opencg.yaml /app/opencg.yaml
 
 EXPOSE 8000
-CMD ["uv", "run", "--package", "cortex-pipeline", "uvicorn", \
-     "cortex_pipeline.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "--package", "opencg-pipeline", "uvicorn", \
+     "opencg_pipeline.app:app", "--host", "0.0.0.0", "--port", "8000"]

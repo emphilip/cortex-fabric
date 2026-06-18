@@ -1,4 +1,4 @@
-import type { ConnectorStatus } from "@cortex/shared";
+import type { ConnectorStatus } from "@opencg/shared";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";

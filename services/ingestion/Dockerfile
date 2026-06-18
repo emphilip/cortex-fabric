@@ -18,9 +18,9 @@ COPY services/ingestion /app/services/ingestion
 
 RUN uv sync --no-dev --all-packages
 
-ENV CORTEX_CONFIG=/app/cortex.yaml
-COPY cortex.yaml /app/cortex.yaml
+ENV OPENCG_CONFIG=/app/opencg.yaml
+COPY opencg.yaml /app/opencg.yaml
 
 EXPOSE 8100
-CMD ["uv", "run", "--package", "cortex-ingestion", "uvicorn", \
-     "cortex_ingestion.server:app", "--host", "0.0.0.0", "--port", "8100"]
+CMD ["uv", "run", "--package", "opencg-ingestion", "uvicorn", \
+     "opencg_ingestion.server:app", "--host", "0.0.0.0", "--port", "8100"]

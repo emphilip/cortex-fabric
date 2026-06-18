@@ -1,10 +1,10 @@
 [project]
-name = "cortex-ingestion"
+name = "opencg-ingestion"
 version = "0.0.0"
-description = "Cortex ingestion connectors (thin MVP: git only)."
+description = "openCG ingestion connectors (thin MVP: git only)."
 requires-python = ">=3.12"
 dependencies = [
-  "cortex-shared",
+  "opencg-shared",
   "asyncpg>=0.30",
   "qdrant-client>=1.12,<1.13",
   "httpx>=0.27",
@@ -22,11 +22,11 @@ test = [
 ]
 
 [project.scripts]
-cortex-ingest = "cortex_ingestion.cli:main"
+opencg-ingest = "opencg_ingestion.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cortex_ingestion"]
+packages = ["src/opencg_ingestion"]

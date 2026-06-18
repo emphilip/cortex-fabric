@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Entity } from "@cortex/shared";
+import type { Entity } from "@opencg/shared";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

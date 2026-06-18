@@ -8,11 +8,11 @@ The system SHALL expose an MCP server (TypeScript) that advertises the tools `se
 
 - **WHEN** an MCP client calls `tools/list` against the server
 - **THEN** the server returns the five tools above with input and output schemas
-- **AND** each tool name is namespaced under `cortex/<tool>`
+- **AND** each tool name is namespaced under `opencg/<tool>`
 
 #### Scenario: `retrieve_for_context` returns structured payload
 
-- **WHEN** a client calls `cortex/retrieve_for_context` with a query and a token budget
+- **WHEN** a client calls `opencg/retrieve_for_context` with a query and a token budget
 - **THEN** the response contains an ordered list of context fragments, each with `id`, `source_uri`, `score`, `entitlement_classification`, and `tokens`
 - **AND** the response contains a `correlation_id` matching the audit record for the request
 - **AND** the total tokens across fragments does not exceed the requested budget

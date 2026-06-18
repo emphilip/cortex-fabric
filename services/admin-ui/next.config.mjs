@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
-  transpilePackages: ["@cortex/shared"],
+  transpilePackages: ["@opencg/shared"],
 };
 
 export default nextConfig;

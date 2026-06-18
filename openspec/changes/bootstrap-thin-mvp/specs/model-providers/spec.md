@@ -63,11 +63,11 @@ The system SHALL document that Ollama Cloud's `/api/embed` endpoint is gated and
 #### Scenario: Default embeddings base URL targets local Ollama
 
 - **WHEN** the project is cloned and no env overrides are set
-- **THEN** `CORTEX__OLLAMA__BASE_URL` resolves to `http://ollama:11434`
+- **THEN** `OPENCG__OLLAMA__BASE_URL` resolves to `http://ollama:11434`
 - **AND** the configured embedding model is one supported by the local Ollama image
 
 #### Scenario: Cloud env keys remain configurable but unused by v0
 
-- **WHEN** `CORTEX__OLLAMA__API_KEY` is set in the environment
+- **WHEN** `OPENCG__OLLAMA__API_KEY` is set in the environment
 - **THEN** the embeddings client adds an `Authorization: Bearer <key>` header to outbound requests
 - **AND** no automated v0 behaviour requires the key to be present

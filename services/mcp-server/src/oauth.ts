@@ -75,10 +75,10 @@ function renderForm(
     .map(([k, v]) => `<input type="hidden" name="${esc(k)}" value="${esc(v)}" />`)
     .join("\n      ");
   const err = error ? `<p style="color:#b00">${esc(error)}</p>` : "";
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Cortex — authorize</title>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>openCG — authorize</title>
 <style>body{font-family:system-ui,sans-serif;max-width:24rem;margin:4rem auto;padding:0 1rem}
 input[type=password]{width:100%;padding:.5rem;margin:.5rem 0}button{padding:.5rem 1rem}</style></head>
-<body><h2>Authorize Cortex MCP access</h2>${err}
+<body><h2>Authorize openCG MCP access</h2>${err}
 <form method="post" action="/oauth/approve">
       ${hidden}
   <label>Access password<input type="password" name="password" autofocus required></label>

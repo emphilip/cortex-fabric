@@ -4,8 +4,8 @@ from datetime import datetime
 
 from click.testing import CliRunner
 
-from cortex_ingestion import cli
-from cortex_ingestion.reextract import (
+from opencg_ingestion import cli
+from opencg_ingestion.reextract import (
     ReextractSummary,
     current_extractor_version,
     version_is_current_or_newer,

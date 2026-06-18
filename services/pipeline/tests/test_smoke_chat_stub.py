@@ -28,7 +28,7 @@ def test_smoke_chat_stub_returns_unique_schema_valid_relationship():
             "from": "Smoke catalogue run-123",
             "relation": "related_to",
             "to": "Context windows run-123",
-            "evidence_span": "The Cortex catalogue is related to context windows.",
+            "evidence_span": "The openCG catalogue is related to context windows.",
             "confidence": 0.99,
         }
     ]

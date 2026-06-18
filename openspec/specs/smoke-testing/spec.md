@@ -66,7 +66,7 @@ On timeout, assertion failure, interrupt, or normal exit, the runner MUST termin
 
 ### Requirement: Observable smoke path
 
-The development compose profile SHALL include a healthy OpenTelemetry Collector accepting OTLP/HTTP traffic from Cortex services. The default full smoke MUST verify that the collector receives ingestion resource data and both `pipeline.graph_extract_code` and `pipeline.graph_extract_text` spans generated after the smoke starts.
+The development compose profile SHALL include a healthy OpenTelemetry Collector accepting OTLP/HTTP traffic from openCG services. The default full smoke MUST verify that the collector receives ingestion resource data and both `pipeline.graph_extract_code` and `pipeline.graph_extract_text` spans generated after the smoke starts.
 
 Telemetry assertions MAY be skipped only when the operator explicitly sets the exporter endpoint to `none`, `off`, `disabled`, or an empty value. The skip MUST be visible in smoke output.
 

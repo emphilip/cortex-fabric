@@ -12,7 +12,7 @@ Every service SHALL emit OpenTelemetry traces. A single request SHALL produce a 
 
 ### Requirement: Prometheus metrics
 
-Each service SHALL expose `/metrics` in Prometheus format. The standard set SHALL include `cortex_requests_total{tool,outcome}`, `cortex_stage_latency_seconds_bucket{stage}`, `cortex_tokens_total{stage,model,provider,tenant,direction}`, `cortex_provider_errors_total{provider,error_code}`, and ingestion counters per connector.
+Each service SHALL expose `/metrics` in Prometheus format. The standard set SHALL include `opencg_requests_total{tool,outcome}`, `opencg_stage_latency_seconds_bucket{stage}`, `opencg_tokens_total{stage,model,provider,tenant,direction}`, `opencg_provider_errors_total{provider,error_code}`, and ingestion counters per connector.
 
 #### Scenario: Metrics endpoint returns required series
 
@@ -30,12 +30,12 @@ Every stage that invokes a model provider SHALL record input and output token co
 
 ### Requirement: Cost estimation
 
-The system SHALL maintain a cost-per-1k-tokens table per `(provider, model, direction)` and SHALL compute and emit `cortex_cost_usd_total{provider,model,tenant}` alongside token counts.
+The system SHALL maintain a cost-per-1k-tokens table per `(provider, model, direction)` and SHALL compute and emit `opencg_cost_usd_total{provider,model,tenant}` alongside token counts.
 
 #### Scenario: Cost computed for Anthropic call
 
 - **WHEN** an Anthropic provider call records `tokens_in = 500`, `tokens_out = 100`
-- **THEN** `cortex_cost_usd_total` increases by the configured rate for that model and direction
+- **THEN** `opencg_cost_usd_total` increases by the configured rate for that model and direction
 
 ### Requirement: Grafana dashboards shipped
 
@@ -44,4 +44,4 @@ The repo SHALL ship a `infra/grafana/dashboards/` directory containing dashboard
 #### Scenario: Dashboards present
 
 - **WHEN** the deployment stack starts
-- **THEN** Grafana is provisioned with the shipped dashboards visible under a "Cortex" folder
+- **THEN** Grafana is provisioned with the shipped dashboards visible under a "openCG" folder

@@ -1,10 +1,10 @@
 [project]
-name = "cortex-pipeline"
+name = "opencg-pipeline"
 version = "0.0.0"
 description = "Retrieval pipeline service."
 requires-python = ">=3.12"
 dependencies = [
-  "cortex-shared",
+  "opencg-shared",
   "fastapi>=0.115",
   "uvicorn[standard]>=0.32",
   "httpx>=0.27",
@@ -25,4 +25,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cortex_pipeline"]
+packages = ["src/opencg_pipeline"]

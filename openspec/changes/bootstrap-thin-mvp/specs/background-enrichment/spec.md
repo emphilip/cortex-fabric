@@ -30,11 +30,11 @@ The system SHALL NOT run periodic relationship inference in v0. The candidate-ed
 
 ### Requirement: Usage-feedback ingestion
 
-The system SHALL NOT consume a usage-feedback stream in v0. The MCP `cortex/submit_feedback` tool MUST return `not_implemented_in_mvp` when called.
+The system SHALL NOT consume a usage-feedback stream in v0. The MCP `opencg/submit_feedback` tool MUST return `not_implemented_in_mvp` when called.
 
 #### Scenario: Feedback submission rejected in v0
 
-- **WHEN** an MCP client calls `cortex/submit_feedback`
+- **WHEN** an MCP client calls `opencg/submit_feedback`
 - **THEN** the server returns `code = "not_implemented_in_mvp"`
 - **AND** no row is written to any usage signals table
 

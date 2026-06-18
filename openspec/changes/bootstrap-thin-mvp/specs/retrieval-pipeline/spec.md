@@ -56,7 +56,7 @@ In v0 a replay endpoint MUST NOT be exposed. The audit record MUST still capture
 
 ### Requirement: Per-stage token accounting
 
-Every stage that invokes a model SHALL record `model`, `tokens_in`, `tokens_out`, `latency_ms`, and `provider` on its span AND increment `cortex_tokens_total{stage,model,provider,tenant,direction}`.
+Every stage that invokes a model SHALL record `model`, `tokens_in`, `tokens_out`, `latency_ms`, and `provider` on its span AND increment `opencg_tokens_total{stage,model,provider,tenant,direction}`.
 
 In v0 only the hybrid retrieval stage invokes a model (embedding the query). It MUST set those attributes and increment the counter. Other stages MUST report zero token counts.
 

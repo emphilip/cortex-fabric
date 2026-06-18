@@ -23,7 +23,7 @@ importers:
 
   services/admin-ui:
     dependencies:
-      '@cortex/shared':
+      '@opencg/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@radix-ui/react-dialog':
@@ -141,12 +141,12 @@ importers:
 
   services/mcp-server:
     dependencies:
-      '@cortex/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@4.4.3)
+      '@opencg/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       express:
         specifier: ^5.2.1
         version: 5.2.1

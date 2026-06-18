@@ -1,6 +1,6 @@
 "use client";
 
-import type { RelationshipEdge } from "@cortex/shared";
+import type { RelationshipEdge } from "@opencg/shared";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";

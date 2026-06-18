@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from cortex_pipeline.storage.graph import GraphStore, _reachable_ids
+from opencg_pipeline.storage.graph import GraphStore, _reachable_ids
 
 
 class _Tx:
@@ -96,14 +96,14 @@ async def test_edge_transition_reflects_age_and_writes_audit_in_transaction():
     assert result is not None and result["state"] == "confirmed"
     assert conn.tx_started and conn.tx_finished and not conn.rolled_back
     sql = "\n".join(call[0] for call in conn.calls)
-    assert "UPDATE cortex.relationship_edge" in sql
+    assert "UPDATE opencg.relationship_edge" in sql
     assert "ag_catalog.cypher" in sql
     assert "ag_catalog.agtype" in sql
-    assert "INSERT INTO cortex.graph_audit_log" in sql
+    assert "INSERT INTO opencg.graph_audit_log" in sql
     audit_args = next(
         args
         for statement, args in conn.calls
-        if "INSERT INTO cortex.graph_audit_log" in statement
+        if "INSERT INTO opencg.graph_audit_log" in statement
     )
     assert audit_args[:7] == (
         "alice",
@@ -129,7 +129,7 @@ async def test_idempotent_edge_transition_does_not_write_audit():
 
     assert result is not None and result["state"] == "confirmed"
     assert not any(
-        "INSERT INTO cortex.graph_audit_log" in statement
+        "INSERT INTO opencg.graph_audit_log" in statement
         for statement, _ in conn.calls
     )
 
@@ -142,7 +142,7 @@ async def test_age_failure_rolls_back_transition(monkeypatch):
         raise RuntimeError("AGE failure")
 
     monkeypatch.setattr(
-        "cortex_pipeline.storage.graph.reflect_edge",
+        "opencg_pipeline.storage.graph.reflect_edge",
         fail_age,
     )
     with pytest.raises(RuntimeError, match="AGE failure"):

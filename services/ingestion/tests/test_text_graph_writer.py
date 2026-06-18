@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from cortex_ingestion import text_graph_writer
-from cortex_ingestion.text_graph_writer import write_text_graph
-from cortex_pipeline.storage.catalog import CatalogStore
-from cortex_shared import ExtractionResult
+from opencg_ingestion import text_graph_writer
+from opencg_ingestion.text_graph_writer import write_text_graph
+from opencg_pipeline.storage.catalog import CatalogStore
+from opencg_shared import ExtractionResult
 
 
 class _Tx:
@@ -39,7 +39,7 @@ class _Conn:
 
     async def fetchrow(self, sql: str, *args: object) -> dict[str, object]:
         self.statements.append((sql, args))
-        if "INSERT INTO cortex.relationship_edge" in sql:
+        if "INSERT INTO opencg.relationship_edge" in sql:
             if self.returned_edges:
                 return self.returned_edges.pop(0)
             return {
@@ -119,13 +119,13 @@ async def test_writes_normalized_concepts_edge_evidence_and_age():
     concept_insert = next(
         args
         for sql, args in conn.statements
-        if "INSERT INTO cortex.concept" in sql
+        if "INSERT INTO opencg.concept" in sql
     )
     assert concept_insert[3] == "prompt caching"
     assert concept_insert[5] == ["prompt cache"]
     assert any("ag_catalog.cypher" in sql for sql, _ in conn.statements)
     assert any(
-        "INSERT INTO cortex.relationship_evidence" in sql
+        "INSERT INTO opencg.relationship_evidence" in sql
         for sql, _ in conn.statements
     )
     assert conn.tx_started and conn.tx_finished and not conn.rolled_back
@@ -157,13 +157,13 @@ async def test_uses_authoritative_concept_ids_after_dedupe_conflict():
     edge_insert = next(
         args
         for sql, args in conn.statements
-        if "INSERT INTO cortex.relationship_edge" in sql
+        if "INSERT INTO opencg.relationship_edge" in sql
     )
     assert edge_insert[3:5] == ("existing-code-id", "stored-token-id")
     evidence_insert = next(
         args
         for sql, args in conn.statements
-        if "INSERT INTO cortex.relationship_evidence" in sql
+        if "INSERT INTO opencg.relationship_evidence" in sql
     )
     assert evidence_insert[0] == "existing-code-edge"
     reflected = [

@@ -2,19 +2,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cortex_shared.config import load_config
+from opencg_shared.config import load_config
 
 
 def test_load_default_when_no_file(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("CORTEX_CONFIG", raising=False)
+    monkeypatch.delenv("OPENCG_CONFIG", raising=False)
     cfg = load_config()
     assert cfg.tenant == "default"
     assert cfg.identity.principal == "local-dev"
 
 
 def test_yaml_overrides_default(tmp_path, monkeypatch):
-    cfg_file = tmp_path / "cortex.yaml"
+    cfg_file = tmp_path / "opencg.yaml"
     cfg_file.write_text("tenant: acme\nidentity:\n  principal: alice\n  roles: [admin]\n")
     cfg = load_config(cfg_file)
     assert cfg.tenant == "acme"
@@ -23,11 +23,11 @@ def test_yaml_overrides_default(tmp_path, monkeypatch):
 
 
 def test_env_overrides_yaml(tmp_path, monkeypatch):
-    cfg_file = tmp_path / "cortex.yaml"
+    cfg_file = tmp_path / "opencg.yaml"
     cfg_file.write_text("tenant: acme\n")
-    monkeypatch.setenv("CORTEX__TENANT", "globex")
-    monkeypatch.setenv("CORTEX__IDENTITY__PRINCIPAL", "bob")
-    monkeypatch.setenv("CORTEX__IDENTITY__ROLES", "admin,auditor")
+    monkeypatch.setenv("OPENCG__TENANT", "globex")
+    monkeypatch.setenv("OPENCG__IDENTITY__PRINCIPAL", "bob")
+    monkeypatch.setenv("OPENCG__IDENTITY__ROLES", "admin,auditor")
     cfg = load_config(cfg_file)
     assert cfg.tenant == "globex"
     assert cfg.identity.principal == "bob"
@@ -35,7 +35,7 @@ def test_env_overrides_yaml(tmp_path, monkeypatch):
 
 
 def test_legacy_ollama_populates_provider_defaults(tmp_path, monkeypatch):
-    cfg_file = tmp_path / "cortex.yaml"
+    cfg_file = tmp_path / "opencg.yaml"
     cfg_file.write_text(
         "ollama:\n"
         "  base_url: http://local-ollama:11434\n"
@@ -54,7 +54,7 @@ def test_legacy_ollama_populates_provider_defaults(tmp_path, monkeypatch):
 
 
 def test_chat_provider_env_overrides(tmp_path, monkeypatch):
-    cfg_file = tmp_path / "cortex.yaml"
+    cfg_file = tmp_path / "opencg.yaml"
     cfg_file.write_text(
         "providers:\n"
         "  chat:\n"
@@ -62,8 +62,8 @@ def test_chat_provider_env_overrides(tmp_path, monkeypatch):
         "    base_url: https://ollama.com\n"
         "    model: gemma3:4b\n"
     )
-    monkeypatch.setenv("CORTEX__PROVIDERS__CHAT__MODEL", "kimi-k2")
-    monkeypatch.setenv("CORTEX__PROVIDERS__CHAT__API_KEY", "cloud-key")
+    monkeypatch.setenv("OPENCG__PROVIDERS__CHAT__MODEL", "kimi-k2")
+    monkeypatch.setenv("OPENCG__PROVIDERS__CHAT__API_KEY", "cloud-key")
     cfg = load_config(cfg_file)
     assert cfg.providers.chat is not None
     assert cfg.providers.chat.model == "kimi-k2"

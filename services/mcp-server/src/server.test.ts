@@ -25,15 +25,15 @@ function ctx(httpToken: string | null = null) {
 }
 
 const FIVE_TOOLS = [
-  "cortex/get_entity",
-  "cortex/retrieve_for_context",
-  "cortex/search",
-  "cortex/submit_feedback",
-  "cortex/traverse_graph",
+  "opencg/get_entity",
+  "opencg/retrieve_for_context",
+  "opencg/search",
+  "opencg/submit_feedback",
+  "opencg/traverse_graph",
 ];
 
 describe("buildMcpServer", () => {
-  it("advertises the five cortex tools over an in-memory client", async () => {
+  it("advertises the five opencg tools over an in-memory client", async () => {
     const server = buildMcpServer(ctx());
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
     await server.connect(serverTransport);
@@ -97,7 +97,7 @@ describe("handleMcpHttp", () => {
     expect(res.statusCode).toBe(200);
     const sessionId = res.headers["mcp-session-id"] as string | undefined;
     expect(sessionId).toBeTruthy();
-    expect(await res.body.text()).toContain("cortex");
+    expect(await res.body.text()).toContain("opencg");
 
     // Follow-up request on the same session must reach an initialized server.
     const res2 = await undiciRequest(url, {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { RelationshipType } from "@cortex/shared";
+import type { RelationshipType } from "@opencg/shared";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { Entity } from "@cortex/shared";
+import type { Entity } from "@opencg/shared";
 import { EntityDetail } from "@/components/EntityDetail";
 
 export function EntityDetailView({ entity }: { entity: Entity }) {

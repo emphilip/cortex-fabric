@@ -17,29 +17,29 @@ First start downloads the Postgres+AGE image, the Qdrant image, the Valkey image
 
 ## Configuration
 
-A single `cortex.yaml` file is the source of truth. Environment variables override file values using the convention `CORTEX__<SECTION>__<KEY>` (double underscore separates nesting levels). Copy `.env.example` to `.env` and edit; the compose stack mounts `.env` into every service.
+A single `opencg.yaml` file is the source of truth. Environment variables override file values using the convention `OPENCG__<SECTION>__<KEY>` (double underscore separates nesting levels). Copy `.env.example` to `.env` and edit; the compose stack mounts `.env` into every service.
 
 | Key | Default | Notes |
 |---|---|---|
-| `CORTEX__TENANT` | `default` | Single-tenant deploy slug. |
-| `CORTEX__IDENTITY__PRINCIPAL` | `local-dev` | Stubbed identity. Replace before any non-dev deploy. |
-| `CORTEX__IDENTITY__ROLES` | `admin,reader` | Comma-separated list. |
-| `CORTEX__POSTGRES__URL` | `postgresql://cortex:cortex@postgres:5432/cortex` | Catalog + audit. |
-| `CORTEX__QDRANT__URL` | `http://qdrant:6333` | Vector store. |
-| `CORTEX__VALKEY__URL` | `redis://valkey:6379/0` | Cache (unused by v0). |
-| `CORTEX__OLLAMA__BASE_URL` | `http://ollama:11434` | Compose-internal Ollama by default. |
-| `CORTEX__OLLAMA__EMBEDDING_MODEL` | `nomic-embed-text` | See "Swapping the embedding model" below. |
-| `CORTEX__PROVIDERS__CHAT__BASE_URL` | `https://ollama.com` | Chat endpoint used by text graph extraction. |
-| `CORTEX__PROVIDERS__CHAT__MODEL` | `gemma3:4b` | Independently configurable extraction model. |
-| `CORTEX__PROVIDERS__CHAT__API_KEY` | empty | Secret bearer token for the chat endpoint. |
-| `CORTEX__RETRIEVAL__DEFAULT_TOP_K` | `20` | Per-leg retrieval limit. |
-| `CORTEX__RETRIEVAL__DEFAULT_TOKEN_BUDGET` | `4000` | Assemble-stage hard cap. |
+| `OPENCG__TENANT` | `default` | Single-tenant deploy slug. |
+| `OPENCG__IDENTITY__PRINCIPAL` | `local-dev` | Stubbed identity. Replace before any non-dev deploy. |
+| `OPENCG__IDENTITY__ROLES` | `admin,reader` | Comma-separated list. |
+| `OPENCG__POSTGRES__URL` | `postgresql://opencg:opencg@postgres:5432/opencg` | Catalog + audit. |
+| `OPENCG__QDRANT__URL` | `http://qdrant:6333` | Vector store. |
+| `OPENCG__VALKEY__URL` | `redis://valkey:6379/0` | Cache (unused by v0). |
+| `OPENCG__OLLAMA__BASE_URL` | `http://ollama:11434` | Compose-internal Ollama by default. |
+| `OPENCG__OLLAMA__EMBEDDING_MODEL` | `nomic-embed-text` | See "Swapping the embedding model" below. |
+| `OPENCG__PROVIDERS__CHAT__BASE_URL` | `https://ollama.com` | Chat endpoint used by text graph extraction. |
+| `OPENCG__PROVIDERS__CHAT__MODEL` | `gemma3:4b` | Independently configurable extraction model. |
+| `OPENCG__PROVIDERS__CHAT__API_KEY` | empty | Secret bearer token for the chat endpoint. |
+| `OPENCG__RETRIEVAL__DEFAULT_TOP_K` | `20` | Per-leg retrieval limit. |
+| `OPENCG__RETRIEVAL__DEFAULT_TOKEN_BUDGET` | `4000` | Assemble-stage hard cap. |
 
 ## Extraction model
 
 Two paths share the same chunk → embed → upsert orchestration but differ on what becomes a chunk:
 
-- **Code files** (`.py`, `.ts`, `.go`, `.rs`, `.kt`, ... — anything in graphifyy's tree-sitter dispatch except markdown/yaml/json/html) are processed by `chunk_code_by_symbols`. Each AST symbol (class / function / method) becomes one chunk. The same graphifyy call produces the **deterministic code graph** that lands in `cortex.concept` / `cortex.relationship_edge` as `confirmed` state. Powered by [graphifyy](https://github.com/safishamsi/graphify).
+- **Code files** (`.py`, `.ts`, `.go`, `.rs`, `.kt`, ... — anything in graphifyy's tree-sitter dispatch except markdown/yaml/json/html) are processed by `chunk_code_by_symbols`. Each AST symbol (class / function / method) becomes one chunk. The same graphifyy call produces the **deterministic code graph** that lands in `opencg.concept` / `opencg.relationship_edge` as `confirmed` state. Powered by [graphifyy](https://github.com/safishamsi/graphify).
 - **Text files** (`.md`, `.yaml`, `.toml`, `.json`, ...) flow through `chunk_text` (paragraph splitter). A best-effort chat-model pass extracts candidate concepts and named relationships after the catalog and vector writes succeed.
 
 Code extraction emits `pipeline.graph_extract_code` with zero model tokens. Text extraction emits `pipeline.graph_extract_text`, token counts, latency, accepted-edge counters, and error counters. Provider errors, malformed output, and timeouts are logged and counted but never abort ingestion.
@@ -52,10 +52,10 @@ Text extraction is controlled by:
 
 | Key | Default | Effect |
 |---|---|---|
-| `CORTEX__PROVIDERS__EXTRACTION__ENABLED` | `true` | Enables best-effort text extraction during ingest and re-extract. |
-| `CORTEX__PROVIDERS__EXTRACTION__MIN_CONFIDENCE` | `0.6` | Drops model relationships below this confidence. |
-| `CORTEX__PROVIDERS__EXTRACTION__TIMEOUT_SECONDS` | `30` | Per-chunk chat request deadline. |
-| `CORTEX__PROVIDERS__EXTRACTION__CHAT_QPS` | empty | Reserved rate limit; empty means unbounded. |
+| `OPENCG__PROVIDERS__EXTRACTION__ENABLED` | `true` | Enables best-effort text extraction during ingest and re-extract. |
+| `OPENCG__PROVIDERS__EXTRACTION__MIN_CONFIDENCE` | `0.6` | Drops model relationships below this confidence. |
+| `OPENCG__PROVIDERS__EXTRACTION__TIMEOUT_SECONDS` | `30` | Per-chunk chat request deadline. |
+| `OPENCG__PROVIDERS__EXTRACTION__CHAT_QPS` | empty | Reserved rate limit; empty means unbounded. |
 
 The active prompt and JSON response contract are documented in [`EXTRACTOR_PROMPT.md`](./EXTRACTOR_PROMPT.md).
 
@@ -77,8 +77,8 @@ curl -X POST http://localhost:8000/ingestion/git/run \
 
 # 4. Direct CLI inside the ingestion container
 docker compose -f infra/compose/docker-compose.yml exec ingestion \
-  uv run --package cortex-ingestion \
-  python -m cortex_ingestion.cli git <repo-url>
+  uv run --package opencg-ingestion \
+  python -m opencg_ingestion.cli git <repo-url>
 ```
 
 Re-ingest is idempotent (entities are upserted by stable ID derived from `(tenant, source_uri)`). Run history (from options 2 and 3) is in-memory inside the ingestion container — restarting clears it. A follow-up change adds durable history.
@@ -87,13 +87,13 @@ Re-run text graph extraction without re-embedding:
 
 ```bash
 docker compose -f infra/compose/docker-compose.yml exec ingestion \
-  uv run --package cortex-ingestion \
-  python -m cortex_ingestion.cli re-extract
+  uv run --package opencg-ingestion \
+  python -m opencg_ingestion.cli re-extract
 
 # Optional catalog filters
 docker compose -f infra/compose/docker-compose.yml exec ingestion \
-  uv run --package cortex-ingestion \
-  python -m cortex_ingestion.cli re-extract --source git --since 2026-06-01
+  uv run --package opencg-ingestion \
+  python -m opencg_ingestion.cli re-extract --source git --since 2026-06-01
 ```
 
 Chunks already processed by the current extractor version are skipped. Failures are counted and the command continues with later chunks.
@@ -105,8 +105,8 @@ canaries. Normal ingestion remains unlimited when these options are omitted:
 
 ```bash
 docker compose -f infra/compose/docker-compose.yml exec ingestion \
-  uv run --package cortex-ingestion \
-  python -m cortex_ingestion.cli git <repo-url> \
+  uv run --package opencg-ingestion \
+  python -m opencg_ingestion.cli git <repo-url> \
   --max-documents 1 --max-chunks 2
 ```
 
@@ -130,9 +130,9 @@ chunks:
 make smoke-cloud
 ```
 
-It requires `CORTEX__PROVIDERS__CHAT__BASE_URL`,
-`CORTEX__PROVIDERS__CHAT__MODEL`, and
-`CORTEX__PROVIDERS__CHAT__API_KEY` in `.env`.
+It requires `OPENCG__PROVIDERS__CHAT__BASE_URL`,
+`OPENCG__PROVIDERS__CHAT__MODEL`, and
+`OPENCG__PROVIDERS__CHAT__API_KEY` in `.env`.
 
 The dev stack includes an OpenTelemetry Collector at
 `http://otel-collector:4318`. Set `OTEL_EXPORTER_OTLP_ENDPOINT=none` for an
@@ -169,7 +169,7 @@ Tombstoning sets `tombstoned_at` on the catalog row. The lexical leg of retrieva
 
 ## Swapping the embedding model
 
-The vector dimension is per-collection in Qdrant. If you change `embedding_model`, you must also change `qdrant.vector_size` in `cortex.yaml` to match the new model's output dim — and either recreate the Qdrant collections or stand up a fresh tenant.
+The vector dimension is per-collection in Qdrant. If you change `embedding_model`, you must also change `qdrant.vector_size` in `opencg.yaml` to match the new model's output dim — and either recreate the Qdrant collections or stand up a fresh tenant.
 
 | Model | Dimension | Notes |
 |---|---|---|
@@ -182,8 +182,8 @@ Procedure to swap (full reset):
 
 ```bash
 make down-v
-# Edit cortex.yaml: ollama.embedding_model AND qdrant.vector_size
-# (also update .env's CORTEX__OLLAMA__EMBEDDING_MODEL)
+# Edit opencg.yaml: ollama.embedding_model AND qdrant.vector_size
+# (also update .env's OPENCG__OLLAMA__EMBEDDING_MODEL)
 make up-d
 # First start re-pulls the new model.
 make ingest-git REPO=<your repo>
@@ -203,7 +203,7 @@ v0 hardcodes an identity context from `.env`. Anything calling the MCP server ge
 
 ## Audit log
 
-Every retrieval writes a row to `cortex.audit_log` (partitioned weekly, append-only enforced by trigger). The pipeline exposes two read endpoints:
+Every retrieval writes a row to `opencg.audit_log` (partitioned weekly, append-only enforced by trigger). The pipeline exposes two read endpoints:
 
 ```bash
 curl http://localhost:8000/audit/recent?limit=50
@@ -217,4 +217,4 @@ The admin UI's `/queries` page consumes these.
 - **`make up-d` hangs on `ollama` health** — first start has to download the embedding model. Tail `docker compose logs ollama` to watch the pull. If it hangs longer than ~5 minutes, check the host's network access to `registry.ollama.ai`.
 - **`pipeline /readyz` returns 503** — typically Postgres or Qdrant is still starting; `make ps` shows healthcheck state.
 - **Embedding errors after a model swap** — Qdrant collections retain the old vector dimension. Run `make down-v` and re-ingest.
-- **`Authorization: Bearer …` showing up in local Ollama logs** — fine. Local Ollama ignores the header. If you don't want it, leave `CORTEX__OLLAMA__API_KEY` unset.
+- **`Authorization: Bearer …` showing up in local Ollama logs** — fine. Local Ollama ignores the header. If you don't want it, leave `OPENCG__OLLAMA__API_KEY` unset.

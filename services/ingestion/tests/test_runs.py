@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from cortex_ingestion.runs import RunStore
+from opencg_ingestion.runs import RunStore
 
 
 @pytest.mark.asyncio

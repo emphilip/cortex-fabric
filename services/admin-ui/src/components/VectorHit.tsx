@@ -1,4 +1,4 @@
-import type { VectorSearchHit } from "@cortex/shared";
+import type { VectorSearchHit } from "@opencg/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 

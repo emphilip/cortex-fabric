@@ -4,12 +4,12 @@ import asyncio
 from dataclasses import dataclass
 
 import pytest
-from cortex_shared import CortexConfig
-from cortex_pipeline.providers import EmbeddingResult
+from opencg_shared import openCGConfig
+from opencg_pipeline.providers import EmbeddingResult
 
-from cortex_ingestion import pipeline_runner
-from cortex_ingestion.chunking import Chunk
-from cortex_ingestion.connectors.git import GitDocument
+from opencg_ingestion import pipeline_runner
+from opencg_ingestion.chunking import Chunk
+from opencg_ingestion.connectors.git import GitDocument
 
 
 class _Catalog:
@@ -129,7 +129,7 @@ async def test_extractor_timeout_does_not_abort_chunk_loop(monkeypatch):
     )
     parents, chunks = await pipeline_runner.ingest_documents(
         [doc],
-        cfg=CortexConfig(),
+        cfg=openCGConfig(),
     )
 
     assert (parents, chunks) == (1, 2)
@@ -154,7 +154,7 @@ async def test_document_limit_stops_before_second_parent(monkeypatch):
         "chunk_text",
         lambda text: [Chunk(index=0, text=text)],
     )
-    cfg = CortexConfig()
+    cfg = openCGConfig()
     cfg.providers.extraction.enabled = False
     docs = [
         GitDocument(
@@ -191,7 +191,7 @@ async def test_chunk_limit_stops_downstream_work(monkeypatch):
 
     async def extract(**kwargs):
         extract_calls.append(kwargs["chunk_entity_id"])
-        from cortex_shared import ExtractionResult
+        from opencg_shared import ExtractionResult
 
         return ExtractionResult(concepts=[], relations=[]), None
 
@@ -225,7 +225,7 @@ async def test_chunk_limit_stops_downstream_work(monkeypatch):
 
     summary = await pipeline_runner.ingest_documents(
         [doc],
-        cfg=CortexConfig(),
+        cfg=openCGConfig(),
         max_chunks=2,
     )
 

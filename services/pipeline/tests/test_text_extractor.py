@@ -5,14 +5,14 @@ import json
 
 import pytest
 
-from cortex_pipeline.graph.extract import (
+from opencg_pipeline.graph.extract import (
     build_prompt,
     extract_for_chunk,
     filter_result,
     parse_response,
 )
-from cortex_pipeline.providers import ChatResult, OllamaChat
-from cortex_shared import ExtractionResult
+from opencg_pipeline.providers import ChatResult, OllamaChat
+from opencg_shared import ExtractionResult
 
 
 VOCAB = ["depends_on", "defined_in", "mentions", "related_to", "causes"]

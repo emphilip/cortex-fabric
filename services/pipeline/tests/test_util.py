@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from cortex_pipeline.util import estimate_tokens, hash_context
+from opencg_pipeline.util import estimate_tokens, hash_context
 
 
 def test_estimate_tokens_zero_on_empty():

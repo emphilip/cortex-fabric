@@ -5,7 +5,7 @@
 - [x] 1.3 Root `pyproject.toml` with uv workspace
 - [x] 1.4 `Makefile` targets (`bootstrap`, `up`, `up-d`, `down`, `test`, `lint`, `format`, `ingest-git`, `smoke`)
 - [x] 1.5 `.editorconfig`, `.gitignore`, `.dockerignore`, `.env.example`
-- [x] 1.6 `cortex.yaml` default configuration
+- [x] 1.6 `opencg.yaml` default configuration
 
 ## 2. Storage layer (already shipped)
 
@@ -25,9 +25,9 @@
 ## 4. MCP server — TypeScript (already shipped)
 
 - [x] 4.1 Service scaffold with `@modelcontextprotocol/sdk` stdio transport
-- [x] 4.2 `tools/list` exposing five tool definitions namespaced `cortex/*`
+- [x] 4.2 `tools/list` exposing five tool definitions namespaced `opencg/*`
 - [x] 4.3 Identity stub + caller-supplied correlation-id preservation
-- [x] 4.4 Pipeline client (undici) wired to `CORTEX__PIPELINE__URL`
+- [x] 4.4 Pipeline client (undici) wired to `OPENCG__PIPELINE__URL`
 - [x] 4.5 `/healthz` + `/readyz` HTTP endpoints for compose gating
 - [x] 4.6 `not_implemented_in_mvp` error path for deferred tools
 - [x] 4.7 vitest covering identity propagation, correlation-id behaviour, deferred-tool errors
@@ -55,12 +55,12 @@
 
 ## 7. Knowledge graph (deferred — AGE only)
 
-- [x] 7.1 AGE extension loaded + `cortex` graph created at DB init
+- [x] 7.1 AGE extension loaded + `opencg` graph created at DB init
 - [ ] 7.2 Vocabulary, candidate-edge state machine, traversal — DEFERRED to follow-up change
 
 ## 8. Catalog store (already shipped)
 
-- [x] 8.1 `cortex.entity` schema, stable UUID derivation
+- [x] 8.1 `opencg.entity` schema, stable UUID derivation
 - [x] 8.2 Parent/child lineage for chunks
 - [x] 8.3 Default freshness state set by ingestion
 - [x] 8.4 Lexical search powering the BM25-ish leg of hybrid retrieval
@@ -74,7 +74,7 @@
 
 ## 10. Ingestion (already shipped, git only)
 
-- [x] 10.1 `cortex-ingest` Click CLI
+- [x] 10.1 `opencg-ingest` Click CLI
 - [x] 10.2 Git connector: clone, walk text files, skip-list dirs, content hashing, stable IDs
 - [x] 10.3 Chunker (paragraph-aware with hard-slice fallback)
 - [x] 10.4 Pipeline runner — write entity, chunk, embed, upsert vector
@@ -89,7 +89,7 @@
 
 - [x] 12.1 Hardcoded role→classification allow-list inside `assemble.run`
 - [x] 12.2 Audit row written with full thin-MVP schema (correlation, principal, roles, query, candidates, decisions, final ids, hash, tokens, latency)
-- [x] 12.3 Immutability trigger on `cortex.audit_log`
+- [x] 12.3 Immutability trigger on `opencg.audit_log`
 - [ ] 12.4 OPA client + bundle — DEFERRED
 - [ ] 12.5 Replay endpoint — DEFERRED (storage already shaped to support it)
 
@@ -119,8 +119,8 @@
 - [ ] 15.3 Add an `ollama` service to compose using `ollama/ollama:0.5` (or a pinned newer tag), with a named volume `ollama-data:/root/.ollama`
 - [ ] 15.4 Ollama service healthcheck that returns healthy only when the configured embedding model is loadable (e.g. `ollama list | grep -q $EMBED_MODEL`)
 - [ ] 15.5 `pipeline` and `ingestion` services `depends_on: ollama: { condition: service_healthy }`
-- [ ] 15.6 Pre-pull entrypoint or init script that runs `ollama pull $CORTEX__OLLAMA__EMBEDDING_MODEL` on first start
-- [ ] 15.7 `.env.example` and `cortex.yaml`: default `CORTEX__OLLAMA__BASE_URL` to `http://ollama:11434`; move Cloud config into commented documentation
+- [ ] 15.6 Pre-pull entrypoint or init script that runs `ollama pull $OPENCG__OLLAMA__EMBEDDING_MODEL` on first start
+- [ ] 15.7 `.env.example` and `opencg.yaml`: default `OPENCG__OLLAMA__BASE_URL` to `http://ollama:11434`; move Cloud config into commented documentation
 - [ ] 15.8 Local `.env`: point at the compose Ollama; keep the Cloud key commented for follow-up use
 - [ ] 15.9 Append a note to `openspec/changes/add-foundation/tasks.md` pointing at this change as the thin-MVP contract
 
