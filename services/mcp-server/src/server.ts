@@ -96,7 +96,17 @@ export async function handleMcpHttp(
     );
     return;
   }
+  await dispatchMcp(req, res, ctx);
+}
 
+// Route a `/mcp` request to its Streamable HTTP session WITHOUT any auth gate.
+// Used directly behind OAuth `requireBearerAuth` middleware, and by
+// `handleMcpHttp` (which adds the static-bearer gate) when OAuth is off.
+export async function dispatchMcp(
+  req: IncomingMessage,
+  res: ServerResponse,
+  ctx: ToolCallContext,
+): Promise<void> {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
   // Follow-up request for an existing session (POST call, GET SSE, or DELETE).

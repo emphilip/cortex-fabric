@@ -9,6 +9,10 @@ export interface McpConfig {
   port: number;
   // Optional bearer token for the HTTP `/mcp` transport. null/empty = open.
   httpToken: string | null;
+  // Public base URL used in OAuth metadata (e.g. the ngrok HTTPS URL).
+  publicUrl: string;
+  // Operator password gating the stopgap OAuth `/authorize`. null = OAuth off.
+  oauthPassword: string | null;
 }
 
 function env(name: string, fallback?: string): string {
@@ -35,5 +39,9 @@ export function loadConfig(): McpConfig {
     pipelineUrl: env("CORTEX__PIPELINE__URL", "http://pipeline:8000"),
     port: Number(env("CORTEX__MCP__PORT", "8080")),
     httpToken: (process.env.CORTEX__MCP__HTTP_TOKEN ?? "").trim() || null,
+    publicUrl:
+      (process.env.CORTEX__MCP__PUBLIC_URL ?? "").trim() ||
+      `http://localhost:${env("CORTEX__MCP__PORT", "8080")}`,
+    oauthPassword: (process.env.CORTEX__MCP__OAUTH_PASSWORD ?? "").trim() || null,
   };
 }

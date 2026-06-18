@@ -15,6 +15,8 @@ const config: McpConfig = {
   pipelineUrl: "http://unused",
   port: 8080,
   httpToken: null,
+  publicUrl: "http://localhost:8080",
+  oauthPassword: null,
 };
 
 class FakePipeline {

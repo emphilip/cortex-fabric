@@ -13,6 +13,8 @@ function ctx(httpToken: string | null = null) {
     pipelineUrl: "http://unused",
     port: 8080,
     httpToken,
+    publicUrl: "http://localhost:8080",
+    oauthPassword: null,
   };
   const pipeline = {
     retrieve: async () => ({}),

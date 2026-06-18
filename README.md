@@ -163,6 +163,19 @@ claude mcp add --transport http cortex http://localhost:8181/mcp \
 }
 ```
 
+### Connect from claude.ai (OAuth — stopgap)
+
+claude.ai and Claude Desktop's "Add custom connector" GUI authenticate via **OAuth**, not a bearer header. The MCP server ships a **temporary, minimal** OAuth server (single shared password, in-memory tokens — see `services/mcp-server/src/oauth.ts`, marked `REPLACE-BEFORE-PROD`). Enable it by setting both:
+
+```bash
+CORTEX__MCP__PUBLIC_URL=https://your-host.ngrok.app   # externally reachable base URL
+CORTEX__MCP__OAUTH_PASSWORD=<a shared access password>
+```
+
+Restart the mcp-server, then in claude.ai: **Settings → Connectors → Add custom connector** → URL `https://your-host.ngrok.app/mcp`. Claude runs the OAuth flow; on the consent screen, enter the access password. (The static `CORTEX__MCP__HTTP_TOKEN` keeps working alongside this for Claude Code / Cursor.)
+
+> This OAuth is a stopgap, not production auth: one shared password (no per-user identity), tokens are in-memory (lost on restart), self-issued. Replace with a real identity provider before any real deployment.
+
 ### Run on the host instead of Docker
 
 To avoid a container per session, build the server once and point it at the host-exposed pipeline:
